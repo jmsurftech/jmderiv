@@ -220,10 +220,6 @@ export const getMarkerContractType = contract_info => {
         return 'AccumulatorContract';
     }
 
-    if (isDigitContract(contract_type)) {
-        return 'DigitContract';
-    }
-
     return tick_count > 0 ? 'TickContract' : 'NonTickContract';
 };
 
