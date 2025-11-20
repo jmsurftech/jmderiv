@@ -19,7 +19,7 @@ jest.mock('@deriv/core/src/App/Components/Layout/Header/account-info-icon', () =
 describe('AccountHeader', () => {
     const default_mock_store = mockStore({
         client: {
-            balance: '10000.00',
+            balance: '10,000.00',
             currency: 'USD',
             is_logged_in: true,
             is_virtual: false,
@@ -44,14 +44,14 @@ describe('AccountHeader', () => {
             renderComponent();
 
             expect(screen.getByText('Real')).toBeInTheDocument();
-            expect(screen.getByText('10000.00 USD')).toBeInTheDocument();
+            expect(screen.getByText('10,000.00 USD')).toBeInTheDocument();
             expect(screen.getByTestId('account-info-icon')).toBeInTheDocument();
         });
 
         it('should render account info with balance for logged in demo account', () => {
             const demo_store = mockStore({
                 client: {
-                    balance: '5000.00',
+                    balance: '5,000.00',
                     currency: 'USD',
                     is_logged_in: true,
                     is_virtual: true,
@@ -62,7 +62,7 @@ describe('AccountHeader', () => {
             renderComponent(demo_store);
 
             expect(screen.getByText('Demo')).toBeInTheDocument();
-            expect(screen.getByText('5000.00 USD')).toBeInTheDocument();
+            expect(screen.getByText('5,000.00 USD')).toBeInTheDocument();
         });
 
         it('should render "No currency assigned" when currency is not set', () => {
@@ -152,30 +152,30 @@ describe('AccountHeader', () => {
     describe('Props override', () => {
         it('should use props values when provided instead of store values', () => {
             renderComponent(default_mock_store, {
-                balance: '5000.00',
+                balance: '5,000.00',
                 currency: 'EUR',
                 is_logged_in: true,
                 is_virtual: true,
             });
 
             expect(screen.getByText('Demo')).toBeInTheDocument();
-            expect(screen.getByText('5000.00 EUR')).toBeInTheDocument();
+            expect(screen.getByText('5,000.00 EUR')).toBeInTheDocument();
         });
 
         it('should fall back to store values when props are not provided', () => {
             renderComponent();
 
             expect(screen.getByText('Real')).toBeInTheDocument();
-            expect(screen.getByText('10000.00 USD')).toBeInTheDocument();
+            expect(screen.getByText('10,000.00 USD')).toBeInTheDocument();
         });
 
         it('should handle mixed props and store values correctly', () => {
             renderComponent(default_mock_store, {
-                balance: '2500.00',
+                balance: '2,500.00',
                 // currency and is_logged_in will come from store
             });
 
-            expect(screen.getByText('2500.00 USD')).toBeInTheDocument();
+            expect(screen.getByText('2,500.00 USD')).toBeInTheDocument();
             expect(screen.getByText('Real')).toBeInTheDocument();
         });
     });
