@@ -190,7 +190,7 @@ const OpenPositions = observer(({ component_icon, ...props }: TOpenPositions) =>
         getContractById,
     };
 
-    const { isDesktop } = useDevice();
+    const { isMobile } = useDevice();
     const previous_active_positions = usePrevious(active_positions);
 
     const generateContractTypes = () => {
@@ -342,7 +342,7 @@ const OpenPositions = observer(({ component_icon, ...props }: TOpenPositions) =>
                 onClickSell,
                 getPositionById,
                 server_time,
-                isDesktop,
+                isDesktop: !isMobile,
             });
         }
         if (is_accumulator_selected) {
@@ -350,10 +350,10 @@ const OpenPositions = observer(({ component_icon, ...props }: TOpenPositions) =>
                 currency,
                 onClickSell,
                 getPositionById,
-                isDesktop,
+                isDesktop: !isMobile,
             });
         }
-        return getOpenPositionsColumnsTemplate(currency, isDesktop);
+        return getOpenPositionsColumnsTemplate(currency, !isMobile);
     };
 
     const columns = getColumns();
@@ -388,14 +388,14 @@ const OpenPositions = observer(({ component_icon, ...props }: TOpenPositions) =>
 
     const getOpenPositionsTable = () => {
         let classname = 'open-positions';
-        let row_size = isDesktop ? 63 : 5;
+        let row_size = !isMobile ? 63 : 5;
 
         if (is_accumulator_selected) {
             classname = 'open-positions-accumulator open-positions';
-            row_size = isDesktop ? 68 : 3;
+            row_size = !isMobile ? 68 : 3;
         } else if (is_multiplier_selected) {
             classname = 'open-positions-multiplier open-positions';
-            row_size = isDesktop ? 68 : 3;
+            row_size = !isMobile ? 68 : 3;
         }
 
         return (
@@ -413,7 +413,7 @@ const OpenPositions = observer(({ component_icon, ...props }: TOpenPositions) =>
         <React.Fragment>
             <NotificationMessages />
             {active_positions.length !== 0 &&
-                (isDesktop ? (
+                (!isMobile ? (
                     <div
                         className={
                             is_accumulator_selected
