@@ -5,10 +5,12 @@ import { render, screen } from '@testing-library/react';
 
 import AccountInfo from '../account-info.jsx';
 
-// Mock the getAccountType function
+// Mock the required functions from @deriv/shared
 jest.mock('@deriv/shared', () => ({
     ...jest.requireActual('@deriv/shared'),
     getAccountType: jest.fn(),
+    addComma: jest.fn(value => value),
+    getCurrencyDisplayCode: jest.fn(currency => currency),
 }));
 
 const mockGetAccountType = getAccountType as jest.MockedFunction<typeof getAccountType>;
