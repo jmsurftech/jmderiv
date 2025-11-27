@@ -136,7 +136,10 @@ export default class ClientStore extends BaseStore {
     }
 
     get balance() {
-        return this.current_account?.balance?.toString() || undefined;
+        if (this.current_account?.balance !== undefined && this.current_account?.balance !== null) {
+            return this.current_account.balance.toString();
+        }
+        return undefined;
     }
 
     get has_active_real_account() {
@@ -175,7 +178,7 @@ export default class ClientStore extends BaseStore {
     }
 
     get is_virtual() {
-        return getAccountType();
+        return getAccountType() === 'demo';
     }
 
     get is_eu() {

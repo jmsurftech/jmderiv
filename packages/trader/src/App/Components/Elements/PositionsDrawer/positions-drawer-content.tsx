@@ -46,7 +46,7 @@ const PositionsDrawerCardItem = ({
     onClickRemove,
     ...props
 }: TPositionDrawerCardItem) => {
-    const { in_prop } = useNewRowTransition(is_new_row as boolean);
+    const { in_prop } = useNewRowTransition(is_new_row ?? false);
     const onClickRemoveRef = React.useRef(onClickRemove);
     React.useEffect(() => {
         onClickRemoveRef.current = onClickRemove;

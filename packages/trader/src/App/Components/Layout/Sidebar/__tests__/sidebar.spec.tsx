@@ -11,6 +11,13 @@ jest.mock('@deriv/shared', () => ({
     useWS: () => ({
         send: jest.fn(),
     }),
+    getBrandUrl: jest.fn(() => 'https://deriv.com'),
+}));
+
+jest.mock('App/Hooks/useMobileBridge', () => ({
+    useMobileBridge: jest.fn(() => ({
+        sendBridgeEvent: jest.fn((_event, callback) => callback()),
+    })),
 }));
 
 jest.mock('@deriv-com/translations', () => ({
@@ -25,6 +32,7 @@ jest.mock('@deriv-com/translations', () => ({
 jest.mock('@deriv/quill-icons', () => ({
     ...jest.requireActual('@deriv/quill-icons'),
     DerivProductBrandLightDerivTraderLogoIcon: () => 'DerivProductBrandLightDerivTraderLogoIcon',
+    LegacyHomeNewIcon: () => 'LegacyHomeNewIcon',
     LegacyMinimize2pxIcon: () => 'LegacyMinimize2pxIcon',
     StandaloneCircleUserRegularIcon: () => 'StandaloneCircleUserRegularIcon',
     StandaloneCircleUserFillIcon: () => 'StandaloneCircleUserFillIcon',
@@ -80,6 +88,8 @@ describe('<Sidebar />', () => {
 
     beforeEach(() => {
         jest.clearAllMocks();
+        delete (window as any).location;
+        (window as any).location = { href: '' };
     });
 
     it('should render the sidebar with logo', () => {
@@ -87,13 +97,47 @@ describe('<Sidebar />', () => {
         expect(screen.getByText('DerivProductBrandLightDerivTraderLogoIcon')).toBeInTheDocument();
     });
 
+    it('should render Home button for all users', () => {
+        renderSidebar();
+        expect(screen.getByTestId('dt_sidebar_home')).toBeInTheDocument();
+    });
+
+    it('should render Home button even when user is not logged in', () => {
+        const store = mockStore({
+            ...defaultStoreConfig,
+            client: {
+                is_logged_in: false,
+            },
+        });
+        renderSidebar(store);
+        expect(screen.getByTestId('dt_sidebar_home')).toBeInTheDocument();
+    });
+
+    it('should navigate to home when Home button is clicked', () => {
+        const store = mockStore({
+            ...defaultStoreConfig,
+            client: {
+                ...defaultStoreConfig.client,
+                currency: 'USD',
+            },
+        });
+        renderSidebar(store);
+        const homeButton = screen.getByTestId('dt_sidebar_home');
+        fireEvent.click(homeButton);
+        expect(window.location.href).toBe(
+            'https://deriv.com/options?acc=options&curr=USD&from=home&source=options&lang=en'
+        );
+        expect(store.ui.closeSidebarFlyout).toHaveBeenCalled();
+    });
+
     it('should render navigation items when user is logged in', () => {
         renderSidebar();
+        expect(screen.getByTestId('dt_sidebar_home')).toBeInTheDocument();
         expect(screen.getByTestId('dt_sidebar_positions')).toBeInTheDocument();
         expect(screen.getByTestId('dt_sidebar_reports')).toBeInTheDocument();
     });
 
-    it('should not render navigation items when user is not logged in', () => {
+    it('should not render Positions and Reports when user is not logged in', () => {
         const store = mockStore({
             ...defaultStoreConfig,
             client: {
@@ -105,11 +149,24 @@ describe('<Sidebar />', () => {
         expect(screen.queryByTestId('dt_sidebar_reports')).not.toBeInTheDocument();
     });
 
-    it('should render utility items (language, theme, and account)', () => {
+    it('should render utility items (language, theme, and account) when logged in', () => {
         renderSidebar();
         expect(screen.getByTestId('dt_sidebar_language')).toBeInTheDocument();
         expect(screen.getByTestId('dt_sidebar_theme')).toBeInTheDocument();
         expect(screen.getByTestId('dt_sidebar_account')).toBeInTheDocument();
+    });
+
+    it('should not render Account button when user is not logged in', () => {
+        const store = mockStore({
+            ...defaultStoreConfig,
+            client: {
+                is_logged_in: false,
+            },
+        });
+        renderSidebar(store);
+        expect(screen.getByTestId('dt_sidebar_language')).toBeInTheDocument();
+        expect(screen.getByTestId('dt_sidebar_theme')).toBeInTheDocument();
+        expect(screen.queryByTestId('dt_sidebar_account')).not.toBeInTheDocument();
     });
 
     it('should display badge count when there are active positions', () => {

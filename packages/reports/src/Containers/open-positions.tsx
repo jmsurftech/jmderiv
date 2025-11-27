@@ -241,8 +241,7 @@ const OpenPositions = observer(({ component_icon, ...props }: TOpenPositions) =>
         return contract_types;
     };
 
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    const contract_types = React.useMemo(() => generateContractTypes(), [previous_active_positions]);
+    const contract_types = React.useMemo(() => generateContractTypes(), [previous_active_positions, localize]);
 
     // Get the initial contract type value from localStorage (user selection) or fallback to contract_types
     const [contract_type_value, setContractTypeValue] = React.useState(() => {
@@ -256,14 +255,17 @@ const OpenPositions = observer(({ component_icon, ...props }: TOpenPositions) =>
         return contract_types.find(type => type.is_default)?.value || 'options';
     });
     const prev_contract_type_value = usePrevious(contract_type_value);
-    const accumulator_rates = [
-        { text: localize('All growth rates'), value: 'all growth rates' },
-        { text: '1%', value: '1%' },
-        { text: '2%', value: '2%' },
-        { text: '3%', value: '3%' },
-        { text: '4%', value: '4%' },
-        { text: '5%', value: '5%' },
-    ];
+    const accumulator_rates = React.useMemo(
+        () => [
+            { text: localize('All growth rates'), value: 'all growth rates' },
+            { text: '1%', value: '1%' },
+            { text: '2%', value: '2%' },
+            { text: '3%', value: '3%' },
+            { text: '4%', value: '4%' },
+            { text: '5%', value: '5%' },
+        ],
+        [localize]
+    );
     const [accumulator_rate, setAccumulatorRate] = React.useState(accumulator_rates[0].value);
     const prev_accumulator_rate = usePrevious(accumulator_rate);
     const is_accumulator_selected = contract_type_value === contract_types[2].value;
@@ -334,7 +336,7 @@ const OpenPositions = observer(({ component_icon, ...props }: TOpenPositions) =>
 
     if (error) return <p>{error}</p>;
 
-    const getColumns = () => {
+    const columns = React.useMemo(() => {
         if (is_multiplier_selected && server_time) {
             return getMultiplierOpenPositionsColumnsTemplate({
                 currency,
@@ -354,9 +356,17 @@ const OpenPositions = observer(({ component_icon, ...props }: TOpenPositions) =>
             });
         }
         return getOpenPositionsColumnsTemplate(currency, !isMobile);
-    };
-
-    const columns = getColumns();
+    }, [
+        is_multiplier_selected,
+        is_accumulator_selected,
+        server_time,
+        currency,
+        onClickCancel,
+        onClickSell,
+        getPositionById,
+        isMobile,
+        localize,
+    ]);
 
     const columns_map = {} as Record<TColIndex, TDataListCell['column']>;
     columns.forEach(e => {

@@ -5,6 +5,7 @@ import classNames from 'classnames';
 import { Button, Flyout, Text } from '@deriv/components';
 import {
     DerivProductBrandLightDerivTraderLogoIcon,
+    LegacyHomeNewIcon,
     StandaloneCircleUserFillIcon,
     StandaloneCircleUserRegularIcon,
     StandaloneClockThreeFillIcon,
@@ -15,9 +16,11 @@ import {
     StandaloneMoonRegularIcon,
     StandaloneSunBrightRegularIcon,
 } from '@deriv/quill-icons';
-import { routes } from '@deriv/shared';
+import { getBrandUrl, routes } from '@deriv/shared';
 import { observer, useStore } from '@deriv/stores';
 import { Localize, localize, useTranslations } from '@deriv-com/translations';
+
+import { useMobileBridge } from 'App/Hooks/useMobileBridge';
 
 import SidebarIntroTooltip from '../../../../_common/components/SidebarIntroTooltip';
 import { PositionsDrawerContent, PositionsDrawerFooter } from '../../Elements/PositionsDrawer';
@@ -36,15 +39,17 @@ type TSidebarItem = {
 };
 
 const Sidebar = observer(() => {
-    const { ui, client, portfolio } = useStore();
+    const { ui, client, portfolio, common } = useStore();
     const { currentLang } = useTranslations();
     const { is_dark_mode_on, active_sidebar_flyout, setSidebarFlyout, closeSidebarFlyout } = ui;
     const { is_logged_in } = client;
+    const { current_language } = common;
     const { active_positions_count, onMount, onUnmount } = portfolio;
     const location = useLocation();
     const history = useHistory();
     const [is_sidebar_highlighted, setIsSidebarHighlighted] = React.useState(false);
     const sidebar_ref = React.useRef<HTMLElement>(null);
+    const { sendBridgeEvent } = useMobileBridge();
 
     React.useEffect(() => {
         onMount();
@@ -79,6 +84,16 @@ const Sidebar = observer(() => {
         history.push(routes.reports);
     };
 
+    const handleHomeClick = () => {
+        closeSidebarFlyout();
+        sendBridgeEvent('trading:home', () => {
+            const brandUrl = getBrandUrl();
+            const lang_param = current_language ? `&lang=${current_language}` : '';
+            const currency = client.currency || '';
+            window.location.href = `${brandUrl}/options?acc=options&curr=${currency}&from=home&source=options${lang_param}`;
+        });
+    };
+
     const closeFlyout = () => {
         closeSidebarFlyout();
     };
@@ -92,6 +107,14 @@ const Sidebar = observer(() => {
     const isReportsActive = isActiveRoute(routes.reports);
 
     const navigationItems: TSidebarItem[] = [
+        {
+            id: 'home',
+            icon: <LegacyHomeNewIcon iconSize='xs' fill='var(--color-text-primary)' />,
+            label: localize('Home'),
+            onClick: handleHomeClick,
+            isActive: false,
+            dataTestId: 'dt_sidebar_home',
+        },
         {
             id: 'positions',
             icon: isPositionsActive ? (
@@ -209,8 +232,12 @@ const Sidebar = observer(() => {
                 {/* Main Navigation */}
                 <nav className='sidebar__nav'>
                     <div className='sidebar__nav-main'>
-                        {is_logged_in &&
-                            navigationItems.map(item => (
+                        {navigationItems.map((item, index) => {
+                            const shouldShow = item.id === 'home' || is_logged_in;
+
+                            if (!shouldShow) return null;
+
+                            return (
                                 <Button
                                     key={item.id}
                                     className={classNames('sidebar__item', {
@@ -227,26 +254,33 @@ const Sidebar = observer(() => {
                                         <Text className='sidebar__item-badge'>{item.badge}</Text>
                                     )}
                                 </Button>
-                            ))}
+                            );
+                        })}
                     </div>
                     {/* Utility Section */}
                     <div className='sidebar__nav-utility'>
                         <div className='sidebar__separator' />
-                        {utilityItems.map(item => (
-                            <Button
-                                key={item.id}
-                                className={classNames('sidebar__item', {
-                                    'sidebar__item--active': item.isActive,
-                                })}
-                                onClick={item.onClick}
-                                data-testid={item.dataTestId}
-                                aria-label={item.label}
-                                type='button'
-                            >
-                                <Text className='sidebar__item-icon'>{item.icon}</Text>
-                                <Text className='sidebar__item-label'>{item.label}</Text>
-                            </Button>
-                        ))}
+                        {utilityItems.map(item => {
+                            const shouldShow = item.id === 'account' ? is_logged_in : true;
+
+                            if (!shouldShow) return null;
+
+                            return (
+                                <Button
+                                    key={item.id}
+                                    className={classNames('sidebar__item', {
+                                        'sidebar__item--active': item.isActive,
+                                    })}
+                                    onClick={item.onClick}
+                                    data-testid={item.dataTestId}
+                                    aria-label={item.label}
+                                    type='button'
+                                >
+                                    <Text className='sidebar__item-icon'>{item.icon}</Text>
+                                    <Text className='sidebar__item-label'>{item.label}</Text>
+                                </Button>
+                            );
+                        })}
                     </div>
                 </nav>
             </aside>

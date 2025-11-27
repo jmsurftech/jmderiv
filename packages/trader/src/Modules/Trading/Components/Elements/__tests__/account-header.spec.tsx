@@ -1,5 +1,6 @@
 import React from 'react';
-import { redirectToLogin } from '@deriv/shared';
+
+import { redirectToLogin, trackAnalyticsEvent } from '@deriv/shared';
 import { mockStore, StoreProvider } from '@deriv/stores';
 import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
@@ -10,6 +11,7 @@ jest.mock('@deriv/shared', () => ({
     ...jest.requireActual('@deriv/shared'),
     getCurrencyDisplayCode: jest.fn((currency: string) => currency),
     redirectToLogin: jest.fn(),
+    trackAnalyticsEvent: jest.fn(),
 }));
 
 jest.mock('@deriv/core/src/App/Components/Layout/Header/account-info-icon', () => {
@@ -81,13 +83,203 @@ describe('AccountHeader', () => {
             expect(screen.getByText('No currency assigned')).toBeInTheDocument();
         });
 
-        it('should render transfer button for logged in users', () => {
+        it('should render transfer button for logged in real account users', () => {
             renderComponent();
 
             const transferButton = screen.getByRole('button', { name: /transfer/i });
             expect(transferButton).toBeInTheDocument();
             expect(transferButton).toHaveAttribute('type', 'button');
             expect(transferButton).toHaveClass('account-header__transfer');
+        });
+
+        it('should render manage button for logged in demo account users', () => {
+            const demo_store = mockStore({
+                client: {
+                    balance: '5,000.00',
+                    currency: 'USD',
+                    is_logged_in: true,
+                    is_virtual: true,
+                    logout: jest.fn(),
+                },
+            });
+
+            renderComponent(demo_store);
+
+            const manageButton = screen.getByRole('button', { name: /manage/i });
+            expect(manageButton).toBeInTheDocument();
+            expect(manageButton).toHaveAttribute('type', 'button');
+            expect(manageButton).toHaveClass('account-header__transfer');
+        });
+        describe('Invalid balance handling', () => {
+            it('should display dash with currency when balance is NaN', () => {
+                const nan_balance_store = mockStore({
+                    client: {
+                        balance: 'NaN',
+                        currency: 'USD',
+                        is_logged_in: true,
+                        is_virtual: false,
+                        logout: jest.fn(),
+                    },
+                });
+
+                renderComponent(nan_balance_store);
+
+                expect(screen.getByText('0.00 USD')).toBeInTheDocument();
+                expect(screen.queryByText('NaN USD')).not.toBeInTheDocument();
+            });
+
+            it('should display dash with currency when balance is null', () => {
+                const null_balance_store = mockStore({
+                    client: {
+                        balance: null as any,
+                        currency: 'EUR',
+                        is_logged_in: true,
+                        is_virtual: false,
+                        logout: jest.fn(),
+                    },
+                });
+
+                renderComponent(null_balance_store);
+
+                expect(screen.getByText('0.00 EUR')).toBeInTheDocument();
+            });
+
+            it('should display dash with currency when balance is undefined', () => {
+                const undefined_balance_store = mockStore({
+                    client: {
+                        balance: undefined,
+                        currency: 'GBP',
+                        is_logged_in: true,
+                        is_virtual: false,
+                        logout: jest.fn(),
+                    },
+                });
+
+                renderComponent(undefined_balance_store);
+
+                expect(screen.getByText('0.00 GBP')).toBeInTheDocument();
+            });
+
+            it('should display dash with currency when balance is empty string', () => {
+                const empty_balance_store = mockStore({
+                    client: {
+                        balance: '',
+                        currency: 'AUD',
+                        is_logged_in: true,
+                        is_virtual: false,
+                        logout: jest.fn(),
+                    },
+                });
+
+                renderComponent(empty_balance_store);
+
+                expect(screen.getByText('0.00 AUD')).toBeInTheDocument();
+            });
+
+            it('should display dash with currency when balance is invalid string', () => {
+                const invalid_balance_store = mockStore({
+                    client: {
+                        balance: 'invalid',
+                        currency: 'CAD',
+                        is_logged_in: true,
+                        is_virtual: false,
+                        logout: jest.fn(),
+                    },
+                });
+
+                renderComponent(invalid_balance_store);
+
+                expect(screen.getByText('0.00 CAD')).toBeInTheDocument();
+                expect(screen.queryByText('invalid CAD')).not.toBeInTheDocument();
+            });
+
+            it('should display balance correctly when balance is a number type', () => {
+                renderComponent(default_mock_store, {
+                    balance: 1000.5,
+                    currency: 'USD',
+                    is_logged_in: true,
+                    is_virtual: false,
+                });
+
+                expect(screen.getByText('1,000.50 USD')).toBeInTheDocument();
+            });
+
+            it('should display numeric 0 balance correctly as 0.00', () => {
+                renderComponent(default_mock_store, {
+                    balance: 0,
+                    currency: 'USD',
+                    is_logged_in: true,
+                    is_virtual: false,
+                });
+
+                expect(screen.getByText('0.00 USD')).toBeInTheDocument();
+                expect(screen.queryByText('0.00 USD')).toBeInTheDocument();
+            });
+
+            it('should display balance correctly when balance is comma-formatted string', () => {
+                const comma_balance_store = mockStore({
+                    client: {
+                        balance: '10,000.00',
+                        currency: 'USD',
+                        is_logged_in: true,
+                        is_virtual: false,
+                        logout: jest.fn(),
+                    },
+                });
+
+                renderComponent(comma_balance_store);
+
+                expect(screen.getByText('10,000.00 USD')).toBeInTheDocument();
+            });
+
+            it('should not render balance section when currency is missing and balance is invalid', () => {
+                const no_currency_invalid_balance_store = mockStore({
+                    client: {
+                        balance: 'NaN',
+                        currency: '',
+                        is_logged_in: true,
+                        is_virtual: false,
+                        logout: jest.fn(),
+                    },
+                });
+
+                renderComponent(no_currency_invalid_balance_store);
+
+                expect(screen.getByText('No currency assigned')).toBeInTheDocument();
+                expect(screen.queryByText(/^- $/)).not.toBeInTheDocument();
+            });
+
+            it('should handle zero balance correctly', () => {
+                const zero_balance_store = mockStore({
+                    client: {
+                        balance: '0.00',
+                        currency: 'USD',
+                        is_logged_in: true,
+                        is_virtual: false,
+                        logout: jest.fn(),
+                    },
+                });
+
+                renderComponent(zero_balance_store);
+
+                expect(screen.getByText('0.00 USD')).toBeInTheDocument();
+            });
+
+            it('should handle negative balance correctly', () => {
+                const negative_balance_store = mockStore({
+                    client: {
+                        balance: '-500.00',
+                        currency: 'USD',
+                        is_logged_in: true,
+                        is_virtual: false,
+                        logout: jest.fn(),
+                    },
+                });
+
+                renderComponent(negative_balance_store);
+
+                expect(screen.getByText('-500.00 USD')).toBeInTheDocument();
+            });
         });
     });
 
@@ -181,11 +373,28 @@ describe('AccountHeader', () => {
     });
 
     describe('Accessibility', () => {
-        it('should have proper aria-label for transfer button with correct value', () => {
+        it('should have proper aria-label for transfer button with correct value for real account', () => {
             renderComponent();
 
             const transferButton = screen.getByRole('button', { name: /transfer/i });
             expect(transferButton).toHaveAttribute('aria-label', 'Transfer');
+        });
+
+        it('should have proper aria-label for manage button with correct value for demo account', () => {
+            const demo_store = mockStore({
+                client: {
+                    balance: '5,000.00',
+                    currency: 'USD',
+                    is_logged_in: true,
+                    is_virtual: true,
+                    logout: jest.fn(),
+                },
+            });
+
+            renderComponent(demo_store);
+
+            const manageButton = screen.getByRole('button', { name: /manage/i });
+            expect(manageButton).toHaveAttribute('aria-label', 'Manage');
         });
 
         it('should have proper aria-label for login button with correct value', () => {
@@ -227,6 +436,101 @@ describe('AccountHeader', () => {
 
             const loginButton = screen.getByRole('button', { name: /log in/i });
             expect(loginButton).toHaveAttribute('type', 'button');
+        });
+        describe('Analytics tracking', () => {
+            it('should track analytics event when transfer button is clicked for real account', async () => {
+                renderComponent();
+
+                const transferButton = screen.getByRole('button', { name: /transfer/i });
+                await userEvent.click(transferButton);
+
+                expect(trackAnalyticsEvent).toHaveBeenCalledWith('ce_trade_types_form_v2', {
+                    action: 'click',
+                    button_type: 'transfer',
+                });
+            });
+
+            it('should track analytics event when manage button is clicked for demo account', async () => {
+                const demo_store = mockStore({
+                    client: {
+                        balance: '5,000.00',
+                        currency: 'USD',
+                        is_logged_in: true,
+                        is_virtual: true,
+                        logout: jest.fn(),
+                    },
+                });
+
+                renderComponent(demo_store);
+
+                const manageButton = screen.getByRole('button', { name: /manage/i });
+                await userEvent.click(manageButton);
+
+                expect(trackAnalyticsEvent).toHaveBeenCalledWith('ce_trade_types_form_v2', {
+                    action: 'click',
+                    button_type: 'manage',
+                });
+            });
+
+            it('should call trackAnalyticsEvent before navigation for transfer button', async () => {
+                const callOrder: string[] = [];
+
+                (trackAnalyticsEvent as jest.Mock).mockImplementation(() => {
+                    callOrder.push('analytics');
+                });
+
+                // Mock window.location.href setter
+                delete (window as any).location;
+                window.location = { href: '' } as any;
+                Object.defineProperty(window.location, 'href', {
+                    set: jest.fn(() => {
+                        callOrder.push('navigation');
+                    }),
+                    get: jest.fn(),
+                });
+
+                renderComponent();
+
+                const transferButton = screen.getByRole('button', { name: /transfer/i });
+                await userEvent.click(transferButton);
+
+                expect(callOrder).toEqual(['analytics', 'navigation']);
+            });
+
+            it('should call trackAnalyticsEvent before navigation for manage button', async () => {
+                const callOrder: string[] = [];
+
+                (trackAnalyticsEvent as jest.Mock).mockImplementation(() => {
+                    callOrder.push('analytics');
+                });
+
+                // Mock window.location.href setter
+                delete (window as any).location;
+                window.location = { href: '' } as any;
+                Object.defineProperty(window.location, 'href', {
+                    set: jest.fn(() => {
+                        callOrder.push('navigation');
+                    }),
+                    get: jest.fn(),
+                });
+
+                const demo_store = mockStore({
+                    client: {
+                        balance: '5,000.00',
+                        currency: 'USD',
+                        is_logged_in: true,
+                        is_virtual: true,
+                        logout: jest.fn(),
+                    },
+                });
+
+                renderComponent(demo_store);
+
+                const manageButton = screen.getByRole('button', { name: /manage/i });
+                await userEvent.click(manageButton);
+
+                expect(callOrder).toEqual(['analytics', 'navigation']);
+            });
         });
 
         it('should have display name', () => {

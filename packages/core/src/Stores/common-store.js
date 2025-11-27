@@ -11,7 +11,6 @@ import {
     mapErrorMessage,
 } from '@deriv/shared';
 import BaseStore from './base-store';
-import BinarySocket from '_common/base/socket_base';
 import ServerTime from '_common/base/server_time';
 import WS from 'Services/ws-methods';
 
@@ -124,8 +123,6 @@ export default class CommonStore extends BaseStore {
                     await initMoment(key);
                     await setLocale(key);
                     this.changeCurrentLanguage(key);
-                    BinarySocket.closeAndOpenNewConnection(key);
-                    this.root_store.client.setIsAuthorize(false);
                     resolve();
                 } catch (e) {
                     reject();

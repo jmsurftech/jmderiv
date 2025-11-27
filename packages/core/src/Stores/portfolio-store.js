@@ -160,22 +160,10 @@ export default class PortfolioStore extends BaseStore {
     }
 
     onBuyResponse({ contract_id, longcode, contract_type }) {
-        // Extract underlying_symbol from shortcode if available
-        let underlying_symbol;
-        if (longcode) {
-            // Shortcode format: "CALL_1HZ100V_19.79_1753695396_1753373396_S0P0"
-            // Extract the second part which is the underlying symbol
-            const parts = longcode.split('_');
-            if (parts.length >= 2) {
-                underlying_symbol = parts[1];
-            }
-        }
-
         const new_pos = {
             contract_id,
             longcode,
             contract_type,
-            underlying_symbol, // Add the extracted underlying symbol
         };
         this.pushNewPosition(new_pos);
     }
