@@ -1,0 +1,44 @@
+@import '../../InputPopover/input-popover.scss';
+@import '../../InputPopover/value-chips.scss';
+@import './duration-unit-selector.scss';
+
+.input-popover.duration-popover {
+    width: 45rem;
+}
+
+.duration-popover {
+    &__layout {
+        display: flex;
+        width: 100%;
+        height: 100%;
+    }
+
+    &__sidebar {
+        width: 17rem;
+        flex-shrink: 0;
+        border-right: 0.1rem solid var(--component-divider-default);
+        background-color: transparent;
+        overflow-y: auto;
+    }
+
+    &__main {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        min-width: 0;
+    }
+
+    &__content {
+        flex: 1;
+        padding: var(--core-spacing-800);
+        overflow-y: auto;
+    }
+
+    &__coming-soon {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        height: 100%;
+        color: var(--component-textIcon-normal-subtle);
+    }
+}
