@@ -14,7 +14,7 @@
         border: none;
         border-radius: var(--core-borderRadius-200, 4px);
         background: var(--component-field-bg-fill-default);
-        color: #c2c2c2;
+        color: var(--color-text-secondary);
         cursor: pointer;
         transition: all 0.2s ease;
         font-size: 1.6rem;
@@ -22,7 +22,7 @@
         &:hover {
             background: var(--component-segmentedControl-bg-single-item-hover);
             transform: scale(1.02);
-            color: #c2c2c2;
+            color: var(--color-text-primary);
         }
 
         &:active {
