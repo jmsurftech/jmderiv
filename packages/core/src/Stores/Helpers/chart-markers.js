@@ -562,10 +562,10 @@ export function calculateMarker(
         }
     }
 
-    let contractMarkerLeftPadding = is_mobile ? 10 : 80;
+    let contractMarkerLeftPadding = is_mobile ? 10 : 100;
 
     if (is_resize_desktop && !is_mobile) {
-        contractMarkerLeftPadding = 330;
+        contractMarkerLeftPadding = 404;
     }
 
     // Helper to normalize profit value to a number or null
