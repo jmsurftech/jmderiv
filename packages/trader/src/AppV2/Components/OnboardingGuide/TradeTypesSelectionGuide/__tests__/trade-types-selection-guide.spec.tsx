@@ -48,6 +48,7 @@ describe('TradeTypesSelectionGuide', () => {
     });
 
     it('should close the Modal and set flag to localStorage equal to true after user clicks on "Got it" button', async () => {
+        const user = userEvent.setup({ delay: null });
         const field = 'trade_types_selection';
         jest.useFakeTimers();
         render(<TradeTypesSelectionGuide />);
@@ -63,7 +64,8 @@ describe('TradeTypesSelectionGuide', () => {
 
         expect(JSON.parse(localStorage.getItem(localStorage_key) as string)[field]).toBe(false);
 
-        await userEvent.click(screen.getByRole('button'));
+        jest.useRealTimers();
+        await user.click(screen.getByRole('button'));
 
         await waitFor(() => {
             expect(screen.queryByText(video)).not.toBeInTheDocument();
@@ -71,7 +73,5 @@ describe('TradeTypesSelectionGuide', () => {
         });
 
         expect(JSON.parse(localStorage.getItem(localStorage_key) as string)[field]).toBe(true);
-
-        jest.useRealTimers();
     });
 });

@@ -102,6 +102,7 @@ describe('isDigitContractWinning', () => {
 
 describe('focusAndOpenKeyboard', () => {
     it('should apply focus to the passed ReactElement', async () => {
+        const user = userEvent.setup({ delay: null });
         jest.useFakeTimers();
 
         const MockComponent = () => {
@@ -124,7 +125,7 @@ describe('focusAndOpenKeyboard', () => {
         const input = screen.getByRole('spinbutton');
         expect(input).not.toHaveFocus();
 
-        await userEvent.click(screen.getByText('Focus'));
+        await user.click(screen.getByText('Focus'));
 
         jest.runAllTimers();
 

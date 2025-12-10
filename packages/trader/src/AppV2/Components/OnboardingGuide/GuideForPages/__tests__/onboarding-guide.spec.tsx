@@ -55,6 +55,7 @@ describe('OnboardingGuide', () => {
     });
 
     it('should close the Modal for trading page and start the guide after user clicks on "Let\'s begin" button', async () => {
+        const user = userEvent.setup({ delay: null });
         jest.useFakeTimers({ legacyFakeTimers: true });
         render(<OnboardingGuide />);
 
@@ -68,17 +69,17 @@ describe('OnboardingGuide', () => {
 
         expect(screen.queryByText(guide_container)).not.toBeInTheDocument();
 
-        await userEvent.click(screen.getByRole('button'));
+        jest.useRealTimers();
+        await user.click(screen.getByRole('button'));
 
         await waitFor(() => {
             expect(screen.queryByText(trading_modal_text)).not.toBeInTheDocument();
             expect(screen.getByText(guide_container)).toBeInTheDocument();
         });
-
-        jest.useRealTimers();
     });
 
     it('should close the Modal for positions page, set flag to localStorage equal to true and do NOT start the guide after user clicks on "Got it" button', async () => {
+        const user = userEvent.setup({ delay: null });
         const field = 'positions_page';
         jest.useFakeTimers({ legacyFakeTimers: true });
         render(<OnboardingGuide type='positions_page' />);
@@ -94,7 +95,8 @@ describe('OnboardingGuide', () => {
         expect(screen.queryByText(guide_container)).not.toBeInTheDocument();
         expect(JSON.parse(localStorage.getItem(localStorage_key) as string)[field]).toBe(false);
 
-        await userEvent.click(screen.getByRole('button'));
+        jest.useRealTimers();
+        await user.click(screen.getByRole('button'));
 
         await waitFor(() => {
             expect(screen.queryByText(positions_modal_text)).not.toBeInTheDocument();
@@ -102,11 +104,10 @@ describe('OnboardingGuide', () => {
         });
 
         expect(JSON.parse(localStorage.getItem(localStorage_key) as string)[field]).toBe(true);
-
-        jest.useRealTimers();
     });
 
     it('should close the Modal for trading page and set flag to localStorage equal to true if user clicks on overlay and do NOT start the guide', async () => {
+        const user = userEvent.setup({ delay: null });
         const field = 'trade_page';
         jest.useFakeTimers({ legacyFakeTimers: true });
         render(<OnboardingGuide />);
@@ -122,7 +123,8 @@ describe('OnboardingGuide', () => {
         expect(screen.queryByText(guide_container)).not.toBeInTheDocument();
         expect(JSON.parse(localStorage.getItem(localStorage_key) as string)[field]).toBe(false);
 
-        await userEvent.click(screen.getByTestId('dt-actionsheet-overlay'));
+        jest.useRealTimers();
+        await user.click(screen.getByTestId('dt-actionsheet-overlay'));
 
         await waitFor(() => {
             expect(screen.queryByText(trading_modal_text)).not.toBeInTheDocument();
@@ -130,11 +132,10 @@ describe('OnboardingGuide', () => {
         });
 
         expect(JSON.parse(localStorage.getItem(localStorage_key) as string)[field]).toBe(true);
-
-        jest.useRealTimers();
     });
 
     it('should execute callback function after Modal is closed', async () => {
+        const user = userEvent.setup({ delay: null });
         const callback = jest.fn();
         jest.useFakeTimers({ legacyFakeTimers: true });
         render(<OnboardingGuide callback={callback} type='positions_page' />);
@@ -149,12 +150,11 @@ describe('OnboardingGuide', () => {
 
         expect(screen.queryByText(guide_container)).not.toBeInTheDocument();
 
-        await userEvent.click(screen.getByRole('button'));
+        jest.useRealTimers();
+        await user.click(screen.getByRole('button'));
 
         await waitFor(() => {
             expect(callback).toBeCalled();
         });
-
-        jest.useRealTimers();
     });
 });

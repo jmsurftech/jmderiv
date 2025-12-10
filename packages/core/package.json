@@ -83,7 +83,7 @@
         "webpack": "^5.81.0",
         "webpack-cli": "^5.1.4",
         "webpack-dev-middleware": "^7.4.2",
-        "webpack-dev-server": "^5.2.1",
+        "webpack-dev-server": "^5.2.2",
         "webpack-manifest-plugin": "^4.0.2",
         "webpack-node-externals": "^2.5.2",
         "workbox-webpack-plugin": "^6.0.2"
@@ -93,7 +93,7 @@
         "@datadog/browser-rum": "^5.11.0",
         "@deriv-com/analytics": "1.32.1",
         "@deriv-com/quill-tokens": "2.0.4",
-        "@deriv-com/quill-ui": "1.24.4",
+        "@deriv-com/quill-ui": "1.24.6",
         "@deriv-com/translations": "1.4.0",
         "@deriv-com/ui": "1.36.4",
         "@deriv-com/utils": "^0.0.42",

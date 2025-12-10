@@ -1,6 +1,6 @@
 import React from 'react';
 
-import { act, render, screen, waitFor } from '@testing-library/react';
+import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 
 import RiskManagementInfoModal from '../risk-management-info-modal';
@@ -30,7 +30,7 @@ describe('RiskManagementInfoModal', () => {
     });
 
     it('should toggle the modal visibility when the button is clicked', async () => {
-        jest.useFakeTimers();
+        const user = userEvent.setup();
         render(
             <RiskManagementInfoModal
                 header_content={headerContent}
@@ -40,30 +40,25 @@ describe('RiskManagementInfoModal', () => {
         );
 
         const button = screen.getByRole('button');
-        await userEvent.click(button);
+        await user.click(button);
 
         expect(screen.getByText(headerContent)).toBeInTheDocument();
         expect(screen.getByText(bodyContent)).toBeInTheDocument();
         expect(screen.getByText(infoMessage)).toBeInTheDocument();
 
-        await userEvent.click(button);
-
-        act(() => {
-            jest.advanceTimersByTime(300);
-        });
+        await user.click(button);
 
         await waitFor(() => {
             expect(screen.queryByText(headerContent)).not.toBeInTheDocument();
         });
-
-        jest.useRealTimers();
     });
 
     it('should not render the info message if it is not provided', async () => {
+        const user = userEvent.setup();
         render(<RiskManagementInfoModal header_content={headerContent} body_content={bodyContent} />);
 
         const button = screen.getByRole('button');
-        await userEvent.click(button);
+        await user.click(button);
 
         expect(screen.getByText(headerContent)).toBeInTheDocument();
         expect(screen.getByText(bodyContent)).toBeInTheDocument();

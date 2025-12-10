@@ -12,7 +12,6 @@ describe('AccumulatorStats', () => {
     let default_mock_store: ReturnType<typeof mockStore>;
 
     beforeEach(() => {
-        jest.useFakeTimers();
         default_mock_store = mockStore({
             modules: {
                 trade: {
@@ -50,9 +49,10 @@ describe('AccumulatorStats', () => {
     });
 
     test('should open description when heading is clicked', async () => {
+        const user = userEvent.setup();
         renderAccumulatorState(default_mock_store);
         const heading = screen.getByText('Stats');
-        await userEvent.click(heading);
+        await user.click(heading);
 
         expect(
             screen.getByText(
@@ -62,21 +62,23 @@ describe('AccumulatorStats', () => {
     });
 
     test('should open ActionSheet with stats when expand icon is clicked', async () => {
+        const user = userEvent.setup();
         renderAccumulatorState(default_mock_store);
         const expandIcon = screen.getByTestId('expand-stats-icon');
-        await userEvent.click(expandIcon);
+        await user.click(expandIcon);
 
         const historyText = screen.getByText('History of tick counts');
         expect(historyText).toBeInTheDocument();
     });
 
     test('should close ActionSheet when primary button is clicked', async () => {
+        const user = userEvent.setup();
         renderAccumulatorState(default_mock_store);
         const heading = screen.getByText('Stats');
-        await userEvent.click(heading);
+        await user.click(heading);
 
         const gotItButton = screen.getByText('Got it');
-        await userEvent.click(gotItButton);
+        await user.click(gotItButton);
 
         expect(
             screen.queryByText(

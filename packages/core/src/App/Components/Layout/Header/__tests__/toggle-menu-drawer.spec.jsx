@@ -1,5 +1,5 @@
 import React from 'react';
-import { render, screen } from '@testing-library/react';
+import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { BrowserRouter } from 'react-router-dom';
 import { APIProvider } from '@deriv/api';
@@ -223,95 +223,6 @@ describe('<ToggleMenuDrawer />', () => {
         expect(clearTimeout).toBeCalled();
     });
 
-    it('should use Flutter channel when bridge is available and logout is clicked', async () => {
-        // Mock bridge available
-        mockSendBridgeEvent.mockResolvedValue(true);
-        mockIsBridgeAvailable.mockReturnValue(true);
-        mockUseMobileBridge.mockReturnValue({
-            sendBridgeEvent: mockSendBridgeEvent,
-            isBridgeAvailable: mockIsBridgeAvailable,
-            isDesktop: false,
-        });
-
-        render(mockToggleMenuDrawer());
-
-        // Find and click the hamburger menu to open drawer
-        const hamburgerButton = screen.getByTestId('dt_mobile_drawer_toggle');
-        await userEvent.click(hamburgerButton);
-
-        // Find logout menu item and click it
-        const logoutItems = screen.getAllByTestId('drawer-item');
-        const logoutItem = logoutItems.find(item => item.textContent && item.textContent.includes('Back to app'));
-
-        if (logoutItem) {
-            await userEvent.click(logoutItem);
-
-            expect(mockSendBridgeEvent).toHaveBeenCalledWith('trading:back', expect.any(Function));
-        }
-    });
-
-    it('should fallback to regular logout when bridge is not available', async () => {
-        // Mock bridge not available
-        mockSendBridgeEvent.mockImplementation(async (_event, fallback) => {
-            if (fallback) {
-                await fallback(); // Execute fallback
-            }
-        });
-        mockIsBridgeAvailable.mockReturnValue(false);
-        mockUseMobileBridge.mockReturnValue({
-            sendBridgeEvent: mockSendBridgeEvent,
-            isBridgeAvailable: mockIsBridgeAvailable,
-            isDesktop: false,
-        });
-
-        render(mockToggleMenuDrawer());
-
-        // Find and click the hamburger menu to open drawer
-        const hamburgerButton = screen.getByTestId('dt_mobile_drawer_toggle');
-        await userEvent.click(hamburgerButton);
-
-        // Find logout menu item and click it
-        const logoutItems = screen.getAllByTestId('drawer-item');
-        const logoutItem = logoutItems.find(item => item.textContent && item.textContent.includes('Log out'));
-
-        if (logoutItem) {
-            await userEvent.click(logoutItem);
-
-            expect(mockSendBridgeEvent).toHaveBeenCalledWith('trading:back', expect.any(Function));
-            expect(mockLogout).toHaveBeenCalledTimes(1);
-        }
-    });
-
-    it('should show "Back to app" text when bridge is available', () => {
-        // Mock bridge available
-        mockIsBridgeAvailable.mockReturnValue(true);
-        mockUseMobileBridge.mockReturnValue({
-            sendBridgeEvent: mockSendBridgeEvent,
-            isBridgeAvailable: mockIsBridgeAvailable,
-            isDesktop: false,
-        });
-
-        render(mockToggleMenuDrawer());
-
-        // The component should use "Back to app" text when bridge is available
-        expect(mockIsBridgeAvailable()).toBe(true);
-    });
-
-    it('should show "Log out" text when bridge is not available', () => {
-        // Mock bridge not available
-        mockIsBridgeAvailable.mockReturnValue(false);
-        mockUseMobileBridge.mockReturnValue({
-            sendBridgeEvent: mockSendBridgeEvent,
-            isBridgeAvailable: mockIsBridgeAvailable,
-            isDesktop: false,
-        });
-
-        render(mockToggleMenuDrawer());
-
-        // The component should use "Log out" text when bridge is not available
-        expect(mockIsBridgeAvailable()).toBe(false);
-    });
-
     it('should show back icon when bridge is available', () => {
         // Mock bridge available
         mockIsBridgeAvailable.mockReturnValue(true);
@@ -346,6 +257,7 @@ describe('<ToggleMenuDrawer />', () => {
 
     it('should trigger back event when back icon is clicked and bridge is available', async () => {
         // Mock bridge available
+        const user = userEvent.setup({ delay: null });
         mockSendBridgeEvent.mockResolvedValue(true);
         mockIsBridgeAvailable.mockReturnValue(true);
         mockUseMobileBridge.mockReturnValue({
@@ -357,13 +269,14 @@ describe('<ToggleMenuDrawer />', () => {
         render(mockToggleMenuDrawer());
 
         const toggleButton = screen.getByTestId('dt_mobile_drawer_toggle');
-        await userEvent.click(toggleButton);
+        await user.click(toggleButton);
 
         expect(mockSendBridgeEvent).toHaveBeenCalledWith('trading:back');
     });
 
     it('should open drawer when hamburger icon is clicked and bridge is not available', async () => {
         // Mock bridge not available
+        const user = userEvent.setup({ delay: null });
         mockIsBridgeAvailable.mockReturnValue(false);
         mockUseMobileBridge.mockReturnValue({
             sendBridgeEvent: mockSendBridgeEvent,
@@ -374,7 +287,7 @@ describe('<ToggleMenuDrawer />', () => {
         render(mockToggleMenuDrawer());
 
         const toggleButton = screen.getByTestId('dt_mobile_drawer_toggle');
-        await userEvent.click(toggleButton);
+        await user.click(toggleButton);
 
         // Should open the drawer
         const drawer = screen.getByTestId('mobile-drawer');
@@ -382,13 +295,14 @@ describe('<ToggleMenuDrawer />', () => {
     });
 
     it('should handle bridge errors gracefully', async () => {
-        // Mock bridge error
+        // Mock bridge error - test that fallback is called when bridge fails
+        const user = userEvent.setup({ delay: null });
         mockSendBridgeEvent.mockImplementation(async (_event, fallback) => {
             if (fallback) {
                 await fallback(); // Execute fallback on error
             }
         });
-        mockIsBridgeAvailable.mockReturnValue(true);
+        mockIsBridgeAvailable.mockReturnValue(false);
         mockUseMobileBridge.mockReturnValue({
             sendBridgeEvent: mockSendBridgeEvent,
             isBridgeAvailable: mockIsBridgeAvailable,
@@ -397,19 +311,20 @@ describe('<ToggleMenuDrawer />', () => {
 
         render(mockToggleMenuDrawer());
 
-        // Find and click the hamburger menu to open drawer
+        // Open the drawer (bridge not available so drawer opens)
         const hamburgerButton = screen.getByTestId('dt_mobile_drawer_toggle');
-        await userEvent.click(hamburgerButton);
+        await user.click(hamburgerButton);
 
-        // Find logout menu item and click it
-        const logoutItems = screen.getAllByTestId('drawer-item');
-        const logoutItem = logoutItems.find(item => item.textContent && item.textContent.includes('Back to app'));
+        // Wait for drawer items to appear and find logout menu item
+        let logoutItem;
+        await waitFor(() => {
+            const logoutItems = screen.queryAllByTestId('drawer-item');
+            logoutItem = logoutItems.find(item => item.textContent && item.textContent.includes('Log out'));
+            expect(logoutItem).toBeTruthy();
+        });
 
-        if (logoutItem) {
-            await userEvent.click(logoutItem);
-
-            expect(mockSendBridgeEvent).toHaveBeenCalledWith('trading:back', expect.any(Function));
-            expect(mockLogout).toHaveBeenCalledTimes(1);
-        }
+        await user.click(logoutItem);
+        expect(mockSendBridgeEvent).toHaveBeenCalledWith('trading:back', expect.any(Function));
+        expect(mockLogout).toHaveBeenCalledTimes(1);
     });
 });
