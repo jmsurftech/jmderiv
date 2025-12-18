@@ -9,11 +9,13 @@ import { ActionSheet, TextField, useSnackbar } from '@deriv-com/quill-ui';
 import Carousel from 'AppV2/Components/Carousel';
 import CarouselHeader from 'AppV2/Components/Carousel/carousel-header';
 import { useTraderStore } from 'Stores/useTraderStores';
+import { useDevice } from '@deriv-com/ui';
 
 import { TTradeParametersProps } from '../trade-parameters';
 
 import BarrierDescription from './barrier-description';
 import BarrierInput from './barrier-input';
+import BarrierDesktop from './barrier-desktop';
 
 const Barrier = observer(({ is_minimized }: TTradeParametersProps) => {
     const {
@@ -25,6 +27,7 @@ const Barrier = observer(({ is_minimized }: TTradeParametersProps) => {
         proposal_info,
         trade_type_tab,
     } = useTraderStore();
+    const { isDesktop } = useDevice();
     const [is_open, setIsOpen] = React.useState(false);
     // Barriers should be absolute when using end time (expiry_type === 'endtime') or days duration
     const isDays = duration_unit === 'd' || expiry_type === 'endtime';
@@ -74,6 +77,10 @@ const Barrier = observer(({ is_minimized }: TTradeParametersProps) => {
             component: <BarrierDescription isDays={isDays} />,
         },
     ];
+
+    if (isDesktop) {
+        return <BarrierDesktop is_minimized={is_minimized} />;
+    }
 
     return (
         <>
