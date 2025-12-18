@@ -344,7 +344,7 @@ const StakeInput = observer(({ onClose, is_open }: TStakeInput) => {
         !!details.min_stake &&
         !!details.max_stake && (
             <Localize
-                i18n_default_text='Acceptable range: {{min_stake}} to {{max_stake}} {{currency}}'
+                i18n_default_text='Range: {{min_stake}} to {{max_stake}} {{currency}}'
                 values={{
                     currency: getCurrencyDisplayCode(currency),
                     min_stake: formatMoney(currency, +details.min_stake, true),

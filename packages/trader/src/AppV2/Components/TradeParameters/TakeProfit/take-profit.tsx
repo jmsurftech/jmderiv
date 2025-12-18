@@ -2,7 +2,7 @@ import React from 'react';
 import clsx from 'clsx';
 import { observer } from 'mobx-react-lite';
 
-import { getCurrencyDisplayCode } from '@deriv/shared';
+import { getCurrencyDisplayCode, isMobile } from '@deriv/shared';
 import { Localize } from '@deriv-com/translations';
 import { ActionSheet, TextField } from '@deriv-com/quill-ui';
 
@@ -14,6 +14,9 @@ import { useTraderStore } from 'Stores/useTraderStores';
 
 import TakeProfitAndStopLossInput from '../RiskManagement/take-profit-and-stop-loss-input';
 import { TTradeParametersProps } from '../trade-parameters';
+
+import TakeProfitDesktop from './take-profit-desktop';
+import './take-profit-desktop.scss';
 
 const TakeProfit = observer(({ is_minimized }: TTradeParametersProps) => {
     const { currency, has_open_accu_contract, has_take_profit, is_market_closed, take_profit } = useTraderStore();
@@ -38,6 +41,11 @@ const TakeProfit = observer(({ is_minimized }: TTradeParametersProps) => {
             ),
         },
     ];
+
+    // Use desktop component for desktop, ActionSheet for mobile
+    if (!isMobile()) {
+        return <TakeProfitDesktop is_minimized={is_minimized} />;
+    }
 
     return (
         <React.Fragment>

@@ -1,44 +1,9 @@
-@import '../../InputPopover/input-popover.scss';
+@import '../Shared/trade-parameter-popover.scss';
 @import '../../InputPopover/value-chips.scss';
 
-.stake-popover-overlay {
-    position: fixed;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    z-index: 1000;
-}
-
 .stake-popover {
-    position: fixed;
-    width: 28.2rem;
+    @extend .trade-parameter-popover;
     height: 36rem;
-    max-width: 90vw;
-    max-height: 80vh;
-    background: var(--semantic-color-slate-solid-surface-frame-low);
-    border: none;
-    border-radius: var(--core-borderRadius-400, 8px);
-    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3);
-    display: flex;
-    flex-direction: column;
-    overflow: hidden;
-    z-index: 1001;
-    padding: var(--core-spacing-800);
-    gap: var(--core-spacing-800);
-
-    &__header {
-        flex-shrink: 0;
-
-        .segmented-control-single button {
-            height: 3.2rem;
-        }
-    }
-
-    &__content {
-        flex: 1;
-        overflow-y: auto;
-    }
 }
 
 .stake-chips {
@@ -79,6 +44,26 @@
     }
 }
 
+.stake-input-desktop {
+    &__wrapper {
+        display: flex;
+        flex-direction: column;
+        gap: var(--core-spacing-800);
+        height: 100%;
+    }
+
+    &__details {
+        display: flex;
+        flex-direction: column;
+        gap: var(--core-spacing-800);
+        flex: 1;
+    }
+
+    &__save-button {
+        margin-top: auto;
+    }
+}
+
 .stake-content-desktop {
     display: flex;
     flex-direction: column;
@@ -94,34 +79,19 @@
             display: flex;
             justify-content: space-between;
 
-            p:first-child {
-                color: var(--component-textIcon-normal-subtle);
+            p {
+                &:first-child {
+                    color: var(--component-textIcon-normal-subtle);
+                }
             }
+
             &.error {
-                p:last-child {
-                    color: var(--component-textIcon-statusNormal-danger);
+                p {
+                    &:last-child {
+                        color: var(--component-textIcon-statusNormal-danger);
+                    }
                 }
             }
         }
     }
-}
-
-.stake-input-desktop__wrapper {
-    display: flex;
-    flex-direction: column;
-    gap: var(--core-spacing-1200);
-    height: -webkit-fill-available;
-}
-
-.stake-input-desktop__details {
-    display: flex;
-    flex-direction: column;
-    gap: var(--core-spacing-1200);
-    margin-top: auto;
-}
-
-.stake-input-desktop__save-button {
-    font-size: 1.6rem !important;
-    font-weight: bold !important;
-    border-radius: 100px !important;
 }

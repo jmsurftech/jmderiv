@@ -1,12 +1,11 @@
 import React from 'react';
-import clsx from 'clsx';
 import { observer } from 'mobx-react-lite';
 
 import { getCurrencyDisplayCode } from '@deriv/shared';
-import { TextField } from '@deriv-com/quill-ui';
 import { Localize } from '@deriv-com/translations';
 
-import { InputPopover, ValueChips, TabSelector } from 'AppV2/Components/InputPopover';
+import { ValueChips, TabSelector } from 'AppV2/Components/InputPopover';
+import { TradeParameterPopover } from 'AppV2/Components/TradeParameters/Shared';
 import useTradeError from 'AppV2/Hooks/useTradeError';
 import { getDisplayedContractTypes } from 'AppV2/Utils/trade-types-utils';
 import { useTraderStore } from 'Stores/useTraderStores';
@@ -34,17 +33,12 @@ const Stake = observer(({ is_minimized }: TTradeParametersProps) => {
 
     const [is_open, setIsOpen] = React.useState(false);
     const [active_tab, setActiveTab] = React.useState<'chips' | 'input'>('chips');
-    const stake_field_ref = React.useRef<HTMLDivElement>(null);
 
     const contract_types = getDisplayedContractTypes(trade_types, contract_type, trade_type_tab);
     const is_all_types_with_errors = contract_types.every(item => proposal_info?.[item]?.has_error);
 
     // Showing snackbar for all cases, except when it is Rise/Fall or Digits and only one subtype has error
     const should_show_snackbar = contract_types.length === 1 || is_multiplier || is_all_types_with_errors;
-
-    const onOpen = React.useCallback(() => {
-        setIsOpen(true);
-    }, []);
 
     const handleTabChange = (tab: 'chips' | 'input') => {
         setActiveTab(tab);
@@ -64,38 +58,28 @@ const Stake = observer(({ is_minimized }: TTradeParametersProps) => {
     );
 
     return (
-        <React.Fragment>
-            <div ref={stake_field_ref}>
-                <TextField
-                    disabled={has_open_accu_contract || is_market_closed}
-                    variant='fill'
-                    readOnly
-                    label={<Localize i18n_default_text='Stake' key={`stake${is_minimized ? '-minimized' : ''}`} />}
-                    noStatusIcon
-                    onClick={onOpen}
-                    value={`${amount} ${getCurrencyDisplayCode(currency)}`}
-                    className={clsx('trade-params__option', is_minimized && 'trade-params__option--minimized')}
-                    status={has_error && should_show_snackbar ? 'error' : 'neutral'}
+        <TradeParameterPopover
+            label={<Localize i18n_default_text='Stake' key={`stake${is_minimized ? '-minimized' : ''}`} />}
+            value={`${amount} ${getCurrencyDisplayCode(currency)}`}
+            is_minimized={is_minimized}
+            disabled={has_open_accu_contract || is_market_closed}
+            has_error={has_error && should_show_snackbar}
+            popover_classname='stake-popover'
+            header={<TabSelector activeTab={active_tab} onTabChange={handleTabChange} />}
+            onOpen={() => setIsOpen(true)}
+            onClose={onClose}
+        >
+            {active_tab === 'chips' ? (
+                <ValueChips
+                    values={STAKE_CHIP_VALUES}
+                    selectedValue={amount}
+                    onSelect={handleChipSelect}
+                    formatValue={val => `${val} ${getCurrencyDisplayCode(currency)}`}
                 />
-            </div>
-            <InputPopover isOpen={is_open} onClose={onClose} triggerRef={stake_field_ref} className='stake-popover'>
-                <div className='stake-popover__header'>
-                    <TabSelector activeTab={active_tab} onTabChange={handleTabChange} />
-                </div>
-                <div className='stake-popover__content'>
-                    {active_tab === 'chips' ? (
-                        <ValueChips
-                            values={STAKE_CHIP_VALUES}
-                            selectedValue={amount}
-                            onSelect={handleChipSelect}
-                            formatValue={val => `${val} ${getCurrencyDisplayCode(currency)}`}
-                        />
-                    ) : (
-                        <StakeInputDesktop onClose={onClose} is_open={is_open} />
-                    )}
-                </div>
-            </InputPopover>
-        </React.Fragment>
+            ) : (
+                <StakeInputDesktop onClose={onClose} is_open={is_open} />
+            )}
+        </TradeParameterPopover>
     );
 });
 
