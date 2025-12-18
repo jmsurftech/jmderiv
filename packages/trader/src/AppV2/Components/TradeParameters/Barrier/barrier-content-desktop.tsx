@@ -13,7 +13,14 @@ interface BarrierContentDesktopProps {
 
 const BarrierContentDesktop: React.FC<BarrierContentDesktopProps> = observer(({ barrierType, onClose }) => {
     const { barrier_1, onChange, tick_data } = useTraderStore();
-    const [inputValue, setInputValue] = useState(barrier_1 || '');
+    const getInitialValue = () => {
+        if (!barrier_1) return '';
+        if (barrierType === 'above_spot' || barrierType === 'below_spot') {
+            return barrier_1.replace(/^[+-]/, '');
+        }
+        return barrier_1;
+    };
+    const [inputValue, setInputValue] = useState(getInitialValue());
 
     const { pip_size, quote } = tick_data ?? {};
 
