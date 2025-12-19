@@ -96,10 +96,14 @@ export const getCompleteWebSocketURL = (): string => {
     const account_id = getAccountId();
     const account_type = getAccountType();
 
-    let url = `wss://${server}/${account_type}`;
+    // Only connect to demo/real if BOTH account_type and account_id are present
+    // Otherwise, connect to public endpoint
+    const shouldUseAuthenticatedEndpoint = account_id && (account_type === 'real' || account_type === 'demo');
+
+    let url = `wss://${server}/${shouldUseAuthenticatedEndpoint ? account_type : 'public'}`;
 
     // Add account_id query param for authenticated endpoints (real/demo)
-    if (account_id) {
+    if (shouldUseAuthenticatedEndpoint) {
         url += `?account_id=${account_id}`;
     }
 
