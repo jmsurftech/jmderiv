@@ -1,4 +1,4 @@
-import { getOrySessionToken, getWhoAmIURL } from '@deriv/shared';
+import { getWhoAmIURL } from '@deriv/shared';
 
 /**
  * Check session validity via REST API whoami endpoint
@@ -9,16 +9,11 @@ export const checkWhoAmI = async () => {
         const isProduction = process.env.NODE_ENV === 'production';
         const whoamiUrl = getWhoAmIURL(isProduction);
 
-        // Extract Ory session token from cookies
-        const oryToken = getOrySessionToken();
-
         const response = await fetch(whoamiUrl, {
             method: 'GET',
             credentials: 'include',
             headers: {
                 'Content-Type': 'application/json',
-                // Add Authorization header with Ory token from cookie
-                ...(oryToken && { Authorization: `Bearer ${oryToken}` }),
             },
         });
 

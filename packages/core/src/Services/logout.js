@@ -1,4 +1,4 @@
-import { getLogoutURL, getOrySessionToken, removeCookies } from '@deriv/shared';
+import { getLogoutURL, removeCookies } from '@deriv/shared';
 import { Chat } from '@deriv/utils';
 
 import WS from './ws-methods';
@@ -14,17 +14,12 @@ export const requestRestLogout = async () => {
         const isProduction = process.env.NODE_ENV === 'production';
         const logoutUrl = getLogoutURL(isProduction);
 
-        // Extract Ory session token from cookies
-        const oryToken = getOrySessionToken();
-
         // Step 1: Get logout URL and token
         const response = await fetch(logoutUrl, {
             method: 'GET',
             credentials: 'include',
             headers: {
                 'Content-Type': 'application/json',
-                // Add Authorization header with Ory token from cookie
-                ...(oryToken && { Authorization: `Bearer ${oryToken}` }),
             },
         });
 
@@ -38,10 +33,6 @@ export const requestRestLogout = async () => {
                 await fetch(data.logout_url, {
                     method: 'GET',
                     credentials: 'include',
-                    headers: {
-                        // Add Authorization header to logout_url call as well
-                        ...(oryToken && { Authorization: `Bearer ${oryToken}` }),
-                    },
                 });
             }
         }

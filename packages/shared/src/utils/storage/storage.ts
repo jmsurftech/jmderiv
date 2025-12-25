@@ -255,28 +255,6 @@ export const removeCookies = (...cookie_names: string[]) => {
     });
 };
 
-/**
- * Extract Ory session token from cookies
- * Ory session cookies follow the pattern: ory_session_*
- * @returns {string | null} The Ory session token value or null if not found
- */
-export const getOrySessionToken = (): string | null => {
-    if (typeof document === 'undefined') return null;
-
-    const cookies = document.cookie.split(';');
-    const orySessionCookie = cookies.find(cookie => cookie.trim().startsWith('ory_session_'));
-
-    if (orySessionCookie) {
-        const trimmed = orySessionCookie.trim();
-        const equalIndex = trimmed.indexOf('=');
-        if (equalIndex !== -1) {
-            return trimmed.substring(equalIndex + 1);
-        }
-    }
-
-    return null;
-};
-
 export const LocalStore = isStorageSupported(window.localStorage)
     ? // eslint-disable-next-line @typescript-eslint/no-explicit-any
       new (Store as any)(window.localStorage)
