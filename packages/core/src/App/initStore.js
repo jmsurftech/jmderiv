@@ -50,6 +50,40 @@ const initStore = async (notification_messages, accounts) => {
         if (server_url) localStorage.setItem('config.server_url', server_url);
     }
 
+    // Handle Ory recovery link for mobile app
+    const is_mobile_app = url_params?.get('is_mobile_app');
+    const ory_cookie_link = url_params?.get('ory_cookie_link');
+
+    if (is_mobile_app && ory_cookie_link) {
+        try {
+            const decodedRecoveryLink = atob(ory_cookie_link);
+
+            // Validate URL is from trusted domain
+            const url = new URL(decodedRecoveryLink);
+            const allowedHosts = [
+                'auth.deriv.com',
+                'staging-auth.deriv.com',
+            ];
+            
+            if (!allowedHosts.includes(url.hostname)) {
+                console.error('Invalid ory_cookie_link domain:', url.hostname);
+                return root_store; // or throw error
+            }
+            
+            // Enforce HTTPS
+            if (url.protocol !== 'https:') {
+                console.error('ory_cookie_link must use HTTPS');
+                return root_store;
+            }
+
+            await fetch(decodedRecoveryLink, {
+                credentials: 'include',
+            });
+        } catch (e) {
+            console.error('Failed to decode ory_cookie_link:', e);
+        }
+    }
+
     // Check whoami BEFORE initializing NetworkMonitor to prevent connecting with stale credentials
     const account_id = getAccountId();
     if (account_id) {
