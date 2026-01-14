@@ -97,7 +97,6 @@ const Stake = observer(({ is_minimized }: TTradeParametersProps) => {
             disabled={has_open_accu_contract || is_market_closed}
             has_error={has_error && should_show_snackbar}
             popover_classname='stake-popover'
-            popoverWidth={240}
             header={<TabSelector activeTab={active_tab} onTabChange={handleTabChange} />}
             onOpen={() => setIsOpen(true)}
             onClose={onClose}
