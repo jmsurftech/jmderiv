@@ -24,8 +24,9 @@ const StakePopoverContent: React.FC<{
     amount: number;
     currency: string;
     is_open: boolean;
+    is_multiplier: boolean;
     onChipSelect: (amount: number) => void;
-}> = ({ active_tab, amount, currency, is_open, onChipSelect }) => {
+}> = ({ active_tab, amount, currency, is_open, is_multiplier, onChipSelect }) => {
     const { closePopover } = useTradeParameterPopover();
 
     const handleChipSelectAndClose = useCallback(
@@ -36,10 +37,15 @@ const StakePopoverContent: React.FC<{
         [onChipSelect, closePopover]
     );
 
+    // Use multiplier presets for multiplier trades, standard presets for all other trade types
+    const chipValues = is_multiplier
+        ? TRADE_PARAMETER_PRESETS.stake.multipliers
+        : TRADE_PARAMETER_PRESETS.stake.standard;
+
     return (
         <ChipsWithInputToggle
             activeTab={active_tab}
-            chipValues={TRADE_PARAMETER_PRESETS.stake.desktop}
+            chipValues={chipValues}
             selectedValue={amount}
             onSelect={handleChipSelectAndClose}
             formatValue={(val: number) => `${val} ${getCurrencyDisplayCode(currency)}`}
@@ -105,6 +111,7 @@ const Stake = observer(({ is_minimized }: TTradeParametersProps) => {
                 amount={amount}
                 currency={currency}
                 is_open={is_open}
+                is_multiplier={is_multiplier}
                 onChipSelect={handleChipSelect}
             />
         </TradeParameterPopover>

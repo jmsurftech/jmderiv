@@ -301,14 +301,14 @@ const DurationDesktop: React.FC<DurationDesktopProps> = observer(({ is_minimized
     const formatSecondsValue = useCallback((value: number) => {
         return localize('{{count}} {{second_label}}', {
             count: value,
-            second_label: value === 1 ? localize('second') : localize('seconds'),
+            second_label: localize('sec'),
         });
     }, []);
 
     const formatMinutesValue = useCallback((value: number) => {
         return localize('{{count}} {{minute_label}}', {
             count: value,
-            minute_label: value === 1 ? localize('minute') : localize('minutes'),
+            minute_label: localize('min'),
         });
     }, []);
 

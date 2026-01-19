@@ -15,7 +15,7 @@ const StakeChips = ({ currency, onChipSelect, selected_amount }: TStakeChipsProp
     return (
         <div className='stake-chips'>
             <div className='stake-chips__grid'>
-                {TRADE_PARAMETER_PRESETS.stake.mobile.map(value => (
+                {TRADE_PARAMETER_PRESETS.stake.standard.map(value => (
                     <button
                         key={value}
                         type='button'
