@@ -130,7 +130,7 @@ const Trade = observer(() => {
                         />
                         <div className='trade__market-selector-guide'>
                             <MarketSelector />
-                            <Guide has_label show_guide_for_selected_contract />
+                            <Guide show_guide_for_selected_contract />
                         </div>
                         {isDigitTradeType(contract_type) && <CurrentSpot />}
                         <div className='trade__chart-tooltip'>

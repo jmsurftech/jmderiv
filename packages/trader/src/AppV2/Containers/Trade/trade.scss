@@ -50,8 +50,14 @@
     }
     &__market-selector-guide {
         display: flex;
-        align-items: center;
         justify-content: space-between;
+    }
+    &__guide {
+        height: 3.2rem;
+        width: 3.2rem;
+        border-radius: 1.6rem;
+        padding: unset;
+        background-color: var(--semantic-color-monochrome-surface-normal-lowest);
     }
     &__chart {
         direction: ltr;

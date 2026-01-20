@@ -155,7 +155,7 @@ describe('Guide', () => {
         });
     });
     const renderGuide = (
-        mockProps: React.ComponentProps<typeof Guide> = { has_label: true, show_guide_for_selected_contract: false }
+        mockProps: React.ComponentProps<typeof Guide> = { show_guide_for_selected_contract: false }
     ) => {
         render(
             <StoreProvider store={default_mock_store}>
@@ -170,12 +170,13 @@ describe('Guide', () => {
         jest.clearAllMocks();
     });
 
-    it('should render component with label and if user clicks on it, should show available contract information', async () => {
+    it('should render component with icon button and if user clicks on it, should show available contract information', async () => {
         renderGuide();
 
-        expect(screen.getByText('Guide')).toBeInTheDocument();
+        const guideButton = screen.getByRole('button');
+        expect(guideButton).toBeInTheDocument();
 
-        await userEvent.click(screen.getByRole('button'));
+        await userEvent.click(guideButton);
 
         expect(screen.getByText(trade_types)).toBeInTheDocument();
         mockAvailableContracts.forEach(({ id }) => expect(screen.getByText(id)).toBeInTheDocument());
@@ -202,7 +203,7 @@ describe('Guide', () => {
         const term_definition = 'You can choose a growth rate with values of 1%, 2%, 3%, 4%, and 5%.';
         expect(screen.queryByText(term_definition)).not.toBeInTheDocument();
 
-        await userEvent.click(screen.getByText('Guide'));
+        await userEvent.click(screen.getByRole('button'));
         await userEvent.click(screen.getByText(CONTRACT_LIST.ACCUMULATORS));
 
         // Wait for the AccumulatorsTradeDescription component to load and find the text with "growth rate"
