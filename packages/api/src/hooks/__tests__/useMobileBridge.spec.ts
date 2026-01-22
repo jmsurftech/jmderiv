@@ -10,7 +10,14 @@ const mockConsoleError = jest.spyOn(console, 'error').mockImplementation(() => {
 
 interface TestResult {
     sendBridgeEvent?: (
-        event: 'trading:back' | 'trading:home' | 'trading:transfer' | 'trading:account_creation',
+        event:
+            | 'trading:config'
+            | 'trading:ready'
+            | 'trading:back'
+            | 'trading:home'
+            | 'trading:transfer'
+            | 'trading:account_creation',
+        data?: TradingConfigData,
         fallback?: () => void | Promise<void>
     ) => Promise<boolean>;
     isBridgeAvailable?: boolean;
@@ -62,10 +69,21 @@ const TestComponent = ({ onResult }: { onResult: (result: TestResult) => void })
         React.createElement(
             'button',
             {
+                'data-testid': 'test-send-ready',
+                onClick: async () => {
+                    const result = await hookResult.sendBridgeEvent('trading:ready');
+                    onResult({ sendResult: result });
+                },
+            },
+            'Test Send Ready'
+        ),
+        React.createElement(
+            'button',
+            {
                 'data-testid': 'test-send-with-fallback',
                 onClick: async () => {
                     const mockFallback = jest.fn();
-                    const result = await hookResult.sendBridgeEvent('trading:back', mockFallback);
+                    const result = await hookResult.sendBridgeEvent('trading:back', undefined, mockFallback);
                     onResult({ sendResult: result, fallbackCalled: mockFallback.mock.calls.length });
                 },
             },
@@ -99,7 +117,7 @@ const TestComponent = ({ onResult }: { onResult: (result: TestResult) => void })
                 'data-testid': 'test-send-transfer-with-fallback',
                 onClick: async () => {
                     const mockFallback = jest.fn();
-                    const result = await hookResult.sendBridgeEvent('trading:transfer', mockFallback);
+                    const result = await hookResult.sendBridgeEvent('trading:transfer', undefined, mockFallback);
                     onResult({ sendResult: result, fallbackCalled: mockFallback.mock.calls.length });
                 },
             },
@@ -228,6 +246,26 @@ describe('useMobileBridge', () => {
 
             expect(testResult.sendResult).toBe(true);
             expect(mockPostMessage).toHaveBeenCalledWith(JSON.stringify({ event: 'trading:home' }));
+        });
+
+        it('should send trading:ready event when bridge is available', async () => {
+            // Mock query parameter
+            delete (window as any).location;
+            (window as any).location = { search: '?is_mobile_app=true' };
+
+            const mockPostMessage = jest.fn();
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            (window as any).DerivAppChannel = {
+                postMessage: mockPostMessage,
+            };
+
+            render(React.createElement(TestComponent, { onResult }));
+
+            const button = screen.getByTestId('test-send-ready');
+            await userEvent.click(button);
+
+            expect(testResult.sendResult).toBe(true);
+            expect(mockPostMessage).toHaveBeenCalledWith(JSON.stringify({ event: 'trading:ready' }));
         });
 
         it('should execute fallback when bridge is not available', async () => {

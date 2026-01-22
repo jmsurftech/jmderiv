@@ -17,7 +17,7 @@ jest.mock('@deriv/shared', () => ({
 jest.mock('@deriv/api', () => ({
     ...jest.requireActual('@deriv/api'),
     useMobileBridge: jest.fn(() => ({
-        sendBridgeEvent: jest.fn((_event, callback) => callback()),
+        sendBridgeEvent: jest.fn((_event, _data, callback) => callback && callback()),
     })),
 }));
 

@@ -30,12 +30,23 @@ export const useMobileBridge = () => {
 
     const sendBridgeEvent = useCallback(
         async (
-            event: 'trading:back' | 'trading:home' | 'trading:transfer' | 'trading:account_creation',
+            event:
+                | 'trading:config'
+                | 'trading:ready'
+                | 'trading:back'
+                | 'trading:home'
+                | 'trading:transfer'
+                | 'trading:account_creation',
+            data?: TradingConfigData,
             fallback?: () => void | Promise<void>
         ) => {
             try {
                 if (isBridgeAvailable && window.DerivAppChannel?.postMessage) {
                     const message: DerivAppChannelMessage = { event };
+                    // Include data if provided (e.g., { lang: "EN", theme: "dark" })
+                    if (data) {
+                        message.data = data;
+                    }
                     window.DerivAppChannel.postMessage(JSON.stringify(message));
                     return true; // Successfully sent via bridge
                 } else if (fallback) {

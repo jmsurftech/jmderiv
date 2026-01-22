@@ -28,7 +28,7 @@ const InsufficientBalanceModal = observer(
             if (!is_virtual) {
                 const brandUrl = getBrandUrl();
                 const lang_param = current_language ? `&lang=${current_language}` : '';
-                sendBridgeEvent('trading:transfer', () => {
+                sendBridgeEvent('trading:transfer', undefined, () => {
                     window.location.href = `${brandUrl}/transfer?acc=options&curr=${currency}&from=home&source=options${lang_param}`;
                 });
             } else {

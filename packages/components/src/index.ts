@@ -63,6 +63,7 @@ export { default as RadioGroup } from './components/radio-group';
 export { default as RouteWithSubroutes } from './components/route-with-subroutes';
 export * from './components/skeleton';
 export { default as SelectNative } from './components/select-native';
+export { default as SmartFallbackLoader } from './components/smart-fallback-loader';
 export { default as StaticUrl } from './components/static-url';
 export { default as SwipeableNotification } from './components/swipeable-notification';
 export { default as SwipeableWrapper } from './components/swipeable-wrapper';

@@ -1,10 +1,10 @@
 import React from 'react';
 import { Switch, Prompt, useLocation, Redirect } from 'react-router-dom';
-import { Loading } from '@deriv/components';
+import { SmartFallbackLoader } from '@deriv/components';
+import { routes } from '@deriv/shared';
 import getRoutesConfig from 'App/Constants/routes-config';
 import RouteWithSubRoutes from './route-with-sub-routes.jsx';
 import { observer, useStore } from '@deriv/stores';
-import { routes } from '@deriv/shared';
 
 // List of route patterns that have been removed
 const REMOVED_ROUTE_PATTERNS = [
@@ -46,7 +46,7 @@ const BinaryRoutes = observer(props => {
     }, [location]);
 
     return (
-        <React.Suspense fallback={<Loading />}>
+        <React.Suspense fallback={<SmartFallbackLoader />}>
             <Prompt when={prompt_when} message={promptFn} />
             <RemovedRoutesRedirect />
             <Switch>

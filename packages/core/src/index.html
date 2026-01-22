@@ -6,6 +6,7 @@
             :root {
                 --color-surface-primary: #fff;
                 --color-text-primary: #000;
+                --initial-loader-display: flex;
             }
 
             #platform_name:after {
@@ -27,8 +28,8 @@
                 border-bottom: var(--color-surface-primary);
             }
 
-            .initial-loader__loading {
-                background-color: var(--color-surface-primary);
+            .initial-loader {
+                display: var(--initial-loader-display) !important;
             }
         </style>
         <!-- Start GTM Script -->
@@ -45,7 +46,7 @@
             })(window, document, 'script', 'dataLayer', 'GTM-NF7884S');
         </script>
         <!-- End GTM Script -->
-        <!-- Start theme styles -->
+        <!-- Start theme styles and mobile app loader control -->
         <script type="text/javascript">
             var l = window.location;
 
@@ -70,8 +71,14 @@
                 document.documentElement.style.setProperty('--color-surface-primary', '#181c25');
                 document.documentElement.style.setProperty('--color-text-primary', '#fff');
             }
+
+            // Hide web app loader when inside native mobile app to prevent double loaders
+            var isMobileApp = urlParams.get('is_mobile_app') === 'true';
+            if (isMobileApp) {
+                document.documentElement.style.setProperty('--initial-loader-display', 'none');
+            }
         </script>
-        <!-- End theme styles -->
+        <!-- End theme styles and mobile app loader control -->
         <!-- Start Anti-Clickjack -->
         <style id="antiClickjack">
             body {
@@ -229,7 +236,7 @@
             <div class="sidebar"></div>
             <div class="header"></div>
             <div class="app-contents">
-                <div class="initial-loader initial-loader__loading">
+                <div class="initial-loader">
                     <div class="initial-loader__barspinner barspinner barspinner-light">
                         <div class="initial-loader__barspinner--rect barspinner__rect barspinner__rect--1 rect1"></div>
                         <div class="initial-loader__barspinner--rect barspinner__rect barspinner__rect--2 rect2"></div>

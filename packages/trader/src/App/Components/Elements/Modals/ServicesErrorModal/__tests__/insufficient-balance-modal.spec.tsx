@@ -16,7 +16,7 @@ jest.mock('@deriv/shared', () => ({
 }));
 
 // Mock useMobileBridge hook
-const mockSendBridgeEvent = jest.fn(async (_event, fallback) => {
+const mockSendBridgeEvent = jest.fn(async (_event, _data, fallback) => {
     // Execute fallback to simulate browser behavior
     if (fallback) await fallback();
     return true;
@@ -150,7 +150,7 @@ describe('<InsufficientBalanceModal />', () => {
 
             await userEvent.click(button);
 
-            expect(mockSendBridgeEvent).toHaveBeenCalledWith('trading:transfer', expect.any(Function));
+            expect(mockSendBridgeEvent).toHaveBeenCalledWith('trading:transfer', undefined, expect.any(Function));
         });
 
         it('should not call sendBridgeEvent when OK button is clicked for virtual accounts', async () => {

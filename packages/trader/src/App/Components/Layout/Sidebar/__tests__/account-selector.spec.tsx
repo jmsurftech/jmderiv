@@ -40,7 +40,7 @@ describe('AccountSelector', () => {
         jest.clearAllMocks();
         // Reset the mobile bridge mock to default values
         mockUseMobileBridge.mockReturnValue({
-            sendBridgeEvent: jest.fn(async (_event_name, callback) => {
+            sendBridgeEvent: jest.fn(async (_event_name, _data, callback) => {
                 if (callback) await callback();
                 return Promise.resolve(true);
             }),
@@ -55,7 +55,7 @@ describe('AccountSelector', () => {
 
     it('should render "Back to app" button when bridge is available', () => {
         mockUseMobileBridge.mockReturnValue({
-            sendBridgeEvent: jest.fn(async (_event_name, callback) => {
+            sendBridgeEvent: jest.fn(async (_event_name, _data, callback) => {
                 if (callback) await callback();
                 return Promise.resolve(true);
             }),

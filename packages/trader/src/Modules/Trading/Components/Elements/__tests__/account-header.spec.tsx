@@ -36,7 +36,7 @@ const mockUseDerivativesAccount = jest.fn(() => ({
 }));
 
 // Mock useMobileBridge hook
-const mockSendBridgeEvent = jest.fn(async (_event, fallback) => {
+const mockSendBridgeEvent = jest.fn(async (_event, _data, fallback) => {
     // Execute fallback to simulate browser behavior
     if (fallback) await fallback();
     return true;
@@ -755,7 +755,7 @@ describe('AccountHeader', () => {
                 const transferButton = screen.getByRole('button', { name: /transfer/i });
                 await userEvent.click(transferButton);
 
-                expect(mockSendBridgeEvent).toHaveBeenCalledWith('trading:transfer', expect.any(Function));
+                expect(mockSendBridgeEvent).toHaveBeenCalledWith('trading:transfer', undefined, expect.any(Function));
             });
 
             it('should execute fallback (redirect) when bridge is not available', async () => {

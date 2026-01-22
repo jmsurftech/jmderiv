@@ -112,7 +112,7 @@ const AccountHeader = observer(
                 // Transfer button (for both account types or real-only accounts)
                 const brandUrl = getBrandUrl();
                 const lang_param = common.current_language ? `&lang=${common.current_language}` : '';
-                sendBridgeEvent('trading:transfer', () => {
+                sendBridgeEvent('trading:transfer', undefined, () => {
                     window.location.href = `${brandUrl}/transfer?acc=options&curr=${currency}&from=home&source=options${lang_param}`;
                 });
             }

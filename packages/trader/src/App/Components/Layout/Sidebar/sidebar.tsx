@@ -45,7 +45,6 @@ const Sidebar = observer(() => {
     const { active_positions_count, onMount, onUnmount } = portfolio;
     const location = useLocation();
     const history = useHistory();
-    const [is_sidebar_highlighted, setIsSidebarHighlighted] = React.useState(false);
     const sidebar_ref = React.useRef<HTMLElement>(null);
     const { sendBridgeEvent } = useMobileBridge();
 
@@ -84,7 +83,7 @@ const Sidebar = observer(() => {
 
     const handleHomeClick = () => {
         closeSidebarFlyout();
-        sendBridgeEvent('trading:home', () => {
+        sendBridgeEvent('trading:home', undefined, () => {
             const brandUrl = getBrandUrl();
             const lang_param = current_language ? `&lang=${current_language}` : '';
             const currency = client.currency || '';
@@ -95,10 +94,6 @@ const Sidebar = observer(() => {
     const closeFlyout = () => {
         closeSidebarFlyout();
     };
-
-    const handleSidebarHighlight = React.useCallback((is_highlighted: boolean) => {
-        setIsSidebarHighlighted(is_highlighted);
-    }, []);
 
     // Main navigation items
     const isPositionsActive = active_sidebar_flyout === 'positions';
@@ -212,7 +207,6 @@ const Sidebar = observer(() => {
                 ref={sidebar_ref}
                 className={classNames('sidebar', {
                     sidebar__hidden: !isActiveRoute(routes.index),
-                    'sidebar--highlighted': is_sidebar_highlighted,
                 })}
                 data-testid='dt_sidebar'
             >
