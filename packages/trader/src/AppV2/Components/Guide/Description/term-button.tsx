@@ -5,8 +5,22 @@ import { useDevice } from '@deriv-com/ui';
 
 import { getTermDefinition } from 'AppV2/Utils/contract-description-utils';
 
+export type TTermName =
+    | 'Payout'
+    | 'Entry Spot'
+    | 'Exit Spot'
+    | 'Spot Price'
+    | 'Barrier'
+    | 'Target'
+    | 'Last Digit'
+    | 'Stop Out Level'
+    | 'Take Profit'
+    | 'Stop Loss'
+    | 'Deal Cancellation'
+    | 'Slippage Risk';
+
 type TTermButton = {
-    term: string;
+    term: TTermName | string;
     contract_type: string;
     onTermClick: (term: string) => void;
     children?: React.ReactNode;
@@ -21,7 +35,7 @@ const TermButton = ({ term, contract_type, onTermClick, children }: TTermButton)
             <button
                 className='description__content--definition'
                 onClick={() => onTermClick(term)}
-                aria-label={`View definition of ${term}`}
+                aria-label={term}
                 type='button'
             >
                 {children}
@@ -34,7 +48,7 @@ const TermButton = ({ term, contract_type, onTermClick, children }: TTermButton)
             <button
                 className='description__content--definition'
                 onClick={() => onTermClick(term)}
-                aria-label={`View definition of ${term}`}
+                aria-label={term}
                 type='button'
             >
                 {children}

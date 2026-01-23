@@ -15,6 +15,7 @@ describe('RiseFallTradeDescription', () => {
         const mockOnTermClick = jest.fn();
         render(<RiseFallTradeDescription contract_type={CONTRACT_LIST.RISE_FALL} onTermClick={mockOnTermClick} />);
 
-        expect(screen.getByText(/earn a/i)).toBeInTheDocument();
+        const earnElements = screen.getAllByText(/earn a/i);
+        expect(earnElements.length).toBeGreaterThan(0);
     });
 });

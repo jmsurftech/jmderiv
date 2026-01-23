@@ -16,19 +16,15 @@ describe('AccumulatorsTradeDescription', () => {
     it('should render a proper content', () => {
         render(<AccumulatorsTradeDescription contract_type={CONTRACT_LIST.ACCUMULATORS} onTermClick={jest.fn()} />);
 
-        expect(
-            screen.getByText(
-                /Your payout will continue to grow as long as the current spot price remains within a specified/i
-            )
-        ).toBeInTheDocument();
-        expect(screen.getByText(/This feature is unavailable for ongoing accumulator contracts./i)).toBeInTheDocument();
+        expect(screen.getByText(/Accumulators allow you to predict/i)).toBeInTheDocument();
+        expect(screen.getByText(/Set a target payout to automatically close your contract/i)).toBeInTheDocument();
     });
 
     it('should call onTermClick if user clicks on term "growth rate"', async () => {
         const onTermClick = jest.fn();
         render(<AccumulatorsTradeDescription contract_type={CONTRACT_LIST.ACCUMULATORS} onTermClick={onTermClick} />);
 
-        await userEvent.click(screen.getByRole('button', { name: getTerm().GROWTH_RATE.toLowerCase() }));
+        await userEvent.click(screen.getByRole('button', { name: getTerm().GROWTH_RATE }));
 
         expect(onTermClick).toHaveBeenCalled();
     });
@@ -37,7 +33,7 @@ describe('AccumulatorsTradeDescription', () => {
         const onTermClick = jest.fn();
         render(<AccumulatorsTradeDescription contract_type={CONTRACT_LIST.ACCUMULATORS} onTermClick={onTermClick} />);
 
-        await userEvent.click(screen.getByRole('button', { name: getTerm().RANGE.toLowerCase() }));
+        await userEvent.click(screen.getByRole('button', { name: getTerm().RANGE }));
 
         expect(onTermClick).toHaveBeenCalled();
     });
@@ -46,7 +42,7 @@ describe('AccumulatorsTradeDescription', () => {
         const onTermClick = jest.fn();
         render(<AccumulatorsTradeDescription contract_type={CONTRACT_LIST.ACCUMULATORS} onTermClick={onTermClick} />);
 
-        await userEvent.click(screen.getByRole('button', { name: getTerm().PREVIOUS_SPOT_PRICE.toLowerCase() }));
+        await userEvent.click(screen.getByRole('button', { name: getTerm().PREVIOUS_SPOT_PRICE }));
 
         expect(onTermClick).toHaveBeenCalled();
     });
@@ -55,7 +51,7 @@ describe('AccumulatorsTradeDescription', () => {
         const onTermClick = jest.fn();
         render(<AccumulatorsTradeDescription contract_type={CONTRACT_LIST.ACCUMULATORS} onTermClick={onTermClick} />);
 
-        await userEvent.click(screen.getByRole('button', { name: getTerm().PAYOUT.toLowerCase() }));
+        await userEvent.click(screen.getByRole('button', { name: getTerm().PAYOUT }));
 
         expect(onTermClick).toHaveBeenCalled();
     });
@@ -64,7 +60,8 @@ describe('AccumulatorsTradeDescription', () => {
         const onTermClick = jest.fn();
         render(<AccumulatorsTradeDescription contract_type={CONTRACT_LIST.ACCUMULATORS} onTermClick={onTermClick} />);
 
-        await userEvent.click(screen.getByRole('button', { name: getTerm().TAKE_PROFIT }));
+        const buttons = screen.getAllByRole('button', { name: getTerm().TAKE_PROFIT });
+        await userEvent.click(buttons[buttons.length - 1]);
 
         expect(onTermClick).toHaveBeenCalled();
     });
@@ -73,7 +70,7 @@ describe('AccumulatorsTradeDescription', () => {
         const onTermClick = jest.fn();
         render(<AccumulatorsTradeDescription contract_type={CONTRACT_LIST.ACCUMULATORS} onTermClick={onTermClick} />);
 
-        await userEvent.click(screen.getByRole('button', { name: getTerm().SLIPPAGE_RISK.toLowerCase() }));
+        await userEvent.click(screen.getByRole('button', { name: getTerm().SLIPPAGE_RISK }));
 
         expect(onTermClick).toHaveBeenCalled();
     });

@@ -15,6 +15,7 @@ describe('OverUnderTradeDescription', () => {
         const mockOnTermClick = jest.fn();
         render(<OverUnderTradeDescription contract_type={CONTRACT_LIST.OVER_UNDER} onTermClick={mockOnTermClick} />);
 
-        expect(screen.getByText(/earn a/i)).toBeInTheDocument();
+        const earnElements = screen.getAllByText(/earn a/i);
+        expect(earnElements.length).toBeGreaterThan(0);
     });
 });

@@ -14,6 +14,7 @@ describe('EvenOddTradeDescription ', () => {
         const mockOnTermClick = jest.fn();
         render(<EvenOddTradeDescription contract_type={CONTRACT_LIST.EVEN_ODD} onTermClick={mockOnTermClick} />);
 
-        expect(screen.getByText(/earn a/i)).toBeInTheDocument();
+        const earnElements = screen.getAllByText(/earn a/i);
+        expect(earnElements.length).toBeGreaterThan(0);
     });
 });

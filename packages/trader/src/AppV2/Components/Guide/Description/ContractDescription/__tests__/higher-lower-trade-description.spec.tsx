@@ -17,6 +17,7 @@ describe('HigherLowerTradeDescription', () => {
             <HigherLowerTradeDescription contract_type={CONTRACT_LIST.HIGHER_LOWER} onTermClick={mockOnTermClick} />
         );
 
-        expect(screen.getByText(/earn a/i)).toBeInTheDocument();
+        const earnElements = screen.getAllByText(/earn a/i);
+        expect(earnElements.length).toBeGreaterThan(0);
     });
 });

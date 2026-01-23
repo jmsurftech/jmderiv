@@ -16,16 +16,14 @@ describe('MultipliersTradeDescription', () => {
     it('should render a proper content', () => {
         render(<MultipliersTradeDescription contract_type={CONTRACT_LIST.MULTIPLIERS} onTermClick={jest.fn()} />);
 
-        expect(
-            screen.getByText(/your total profit\/loss will be the percentage increase in the underlying asset price/i)
-        ).toBeInTheDocument();
+        expect(screen.getByText(/Multipliers let you amplify your potential profit or loss/i)).toBeInTheDocument();
     });
 
     it('should call onTermClick if user clicks on term "stop out level"', async () => {
         const onTermClick = jest.fn();
         render(<MultipliersTradeDescription contract_type={CONTRACT_LIST.MULTIPLIERS} onTermClick={onTermClick} />);
 
-        await userEvent.click(screen.getByRole('button', { name: getTerm().STOP_OUT_LEVEL.toLowerCase() }));
+        await userEvent.click(screen.getByRole('button', { name: getTerm().STOP_OUT_LEVEL }));
 
         expect(onTermClick).toHaveBeenCalled();
     });
@@ -61,7 +59,7 @@ describe('MultipliersTradeDescription', () => {
         const onTermClick = jest.fn();
         render(<MultipliersTradeDescription contract_type={CONTRACT_LIST.MULTIPLIERS} onTermClick={onTermClick} />);
 
-        await userEvent.click(screen.getByRole('button', { name: getTerm().SLIPPAGE_RISK.toLowerCase() }));
+        await userEvent.click(screen.getByRole('button', { name: getTerm().SLIPPAGE_RISK }));
 
         expect(onTermClick).toHaveBeenCalled();
     });

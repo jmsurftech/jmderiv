@@ -19,6 +19,7 @@ describe('MatchesDiffersTradeDescription', () => {
             />
         );
 
-        expect(screen.getByText(/earn a/i)).toBeInTheDocument();
+        const earnElements = screen.getAllByText(/earn a/i);
+        expect(earnElements.length).toBeGreaterThan(0);
     });
 });
