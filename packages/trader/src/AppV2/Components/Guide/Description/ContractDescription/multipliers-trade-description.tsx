@@ -123,7 +123,7 @@ const MultipliersTradeDescription = ({
         },
     ];
 
-    return <React.Fragment>{getContractDescription(content)}</React.Fragment>;
+    return <>{getContractDescription(content)}</>;
 };
 
 export default MultipliersTradeDescription;

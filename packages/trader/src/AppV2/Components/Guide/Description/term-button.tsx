@@ -18,7 +18,12 @@ const TermButton = ({ term, contract_type, onTermClick, children }: TTermButton)
 
     if (isMobile) {
         return (
-            <button className='description__content--definition' onClick={() => onTermClick(term)}>
+            <button
+                className='description__content--definition'
+                onClick={() => onTermClick(term)}
+                aria-label={`View definition of ${term}`}
+                type='button'
+            >
                 {children}
             </button>
         );
@@ -26,7 +31,14 @@ const TermButton = ({ term, contract_type, onTermClick, children }: TTermButton)
 
     return (
         <TooltipPortal message={definition} position='top' className='guide-definition-tooltip'>
-            <button className='description__content--definition'>{children}</button>
+            <button
+                className='description__content--definition'
+                onClick={() => onTermClick(term)}
+                aria-label={`View definition of ${term}`}
+                type='button'
+            >
+                {children}
+            </button>
         </TooltipPortal>
     );
 };

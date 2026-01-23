@@ -63,7 +63,7 @@ const MatchesDiffersTradeDescription = ({
             text: differs,
         },
     ];
-    return <React.Fragment>{getContractDescription(content)}</React.Fragment>;
+    return <>{getContractDescription(content)}</>;
 };
 
 export default MatchesDiffersTradeDescription;

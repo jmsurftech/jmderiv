@@ -63,7 +63,7 @@ const OverUnderTradeDescription = ({
             text: under,
         },
     ];
-    return <React.Fragment>{getContractDescription(content)}</React.Fragment>;
+    return <>{getContractDescription(content)}</>;
 };
 
 export default OverUnderTradeDescription;

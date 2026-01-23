@@ -58,10 +58,7 @@ const RiseFallTradeDescription = ({
         {
             type: 'paragraph',
             text: (
-                <Localize
-                    i18n_default_text='Earn a payout if the exit spot is strictly lower than the entry spot.'
-                    components={[]}
-                />
+                <Localize i18n_default_text='Earn a payout if the exit spot is strictly lower than the entry spot.' />
             ),
         },
         {
@@ -82,7 +79,7 @@ const RiseFallTradeDescription = ({
             ),
         },
     ];
-    return <React.Fragment>{getContractDescription(content)}</React.Fragment>;
+    return <>{getContractDescription(content)}</>;
 };
 
 export default RiseFallTradeDescription;

@@ -106,7 +106,7 @@ const AccumulatorsTradeDescription = ({
         },
     ];
 
-    return <React.Fragment>{getContractDescription(content)}</React.Fragment>;
+    return <>{getContractDescription(content)}</>;
 };
 
 export default AccumulatorsTradeDescription;

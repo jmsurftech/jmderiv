@@ -59,7 +59,7 @@ const TouchNoTouchTradeDescription = ({
             text: 'no_touch',
         },
     ];
-    return <React.Fragment>{getContractDescription(content)}</React.Fragment>;
+    return <>{getContractDescription(content)}</>;
 };
 
 export default TouchNoTouchTradeDescription;

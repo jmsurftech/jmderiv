@@ -2,7 +2,6 @@ import React from 'react';
 
 import { ActionSheet, Heading, Text } from '@deriv-com/quill-ui';
 import { Localize } from '@deriv-com/translations';
-import { useDevice } from '@deriv-com/ui';
 
 import { getTermDefinition } from 'AppV2/Utils/contract-description-utils';
 
@@ -13,12 +12,6 @@ type TGuideDefinitionModal = {
 };
 
 const GuideDefinitionModal = ({ contract_type, term, onClose }: TGuideDefinitionModal) => {
-    const { isMobile } = useDevice();
-
-    // Only render ActionSheet on mobile devices
-    // Desktop uses TooltipPortal directly in TermButton component
-    if (!isMobile) return null;
-
     return (
         <ActionSheet.Root isOpen={!!term} onClose={onClose} position='left' expandable={false}>
             <ActionSheet.Portal shouldCloseOnDrag>

@@ -68,7 +68,7 @@ const HigherLowerTradeDescription = ({
             text: <Localize i18n_default_text="If the exit spot is equal to the barrier, you don't earn the payout." />,
         },
     ];
-    return <React.Fragment>{getContractDescription(content)}</React.Fragment>;
+    return <>{getContractDescription(content)}</>;
 };
 
 export default HigherLowerTradeDescription;
