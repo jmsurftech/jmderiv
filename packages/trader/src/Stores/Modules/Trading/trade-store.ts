@@ -2287,15 +2287,17 @@ export default class TradeStore extends BaseStore {
     }
 
     async getFirstOpenMarket(markets_to_search: string[]) {
-        if (this.active_symbols?.length) {
-            return findFirstOpenMarket(this.active_symbols, markets_to_search);
+        // Wait for active_symbols to be populated instead of fetching again
+        if (!this.active_symbols?.length) {
+            try {
+                await when(() => !!this.active_symbols?.length, { timeout: 10000 });
+            } catch (error) {
+                // eslint-disable-next-line no-console
+                console.error('[TradeStore] Timeout waiting for active_symbols:', error);
+                return undefined;
+            }
         }
-        const { active_symbols, error } = await WS.authorized.activeSymbols();
-        if (error) {
-            this.root_store.common.showError({ message: localize('Trading is unavailable at this time.') });
-            return undefined;
-        }
-        return findFirstOpenMarket(active_symbols, markets_to_search);
+        return findFirstOpenMarket(this.active_symbols, markets_to_search);
     }
 
     setStakeBoundary(type: string, min_stake?: number, max_stake?: number) {
