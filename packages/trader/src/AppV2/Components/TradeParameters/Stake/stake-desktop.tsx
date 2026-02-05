@@ -10,8 +10,9 @@ import {
     TradeParameterPopover,
     useTradeParameterPopover,
 } from 'AppV2/Components/TradeParameters/Shared';
-import { TRADE_PARAMETER_PRESETS } from 'AppV2/Config/trade-parameter-presets';
+import { getStakePresets } from 'AppV2/Config/trade-parameter-presets';
 import useTradeError from 'AppV2/Hooks/useTradeError';
+import { mapContractTypeToStakePresetKey } from 'AppV2/Utils/trade-params-preset-utils';
 import { getDisplayedContractTypes } from 'AppV2/Utils/trade-types-utils';
 import { useTraderStore } from 'Stores/useTraderStores';
 
@@ -24,9 +25,9 @@ const StakePopoverContent: React.FC<{
     amount: number;
     currency: string;
     is_open: boolean;
-    is_multiplier: boolean;
+    contract_type: string;
     onChipSelect: (amount: number) => void;
-}> = ({ active_tab, amount, currency, is_open, is_multiplier, onChipSelect }) => {
+}> = ({ active_tab, amount, currency, is_open, contract_type, onChipSelect }) => {
     const { closePopover } = useTradeParameterPopover();
 
     const handleChipSelectAndClose = useCallback(
@@ -37,15 +38,17 @@ const StakePopoverContent: React.FC<{
         [onChipSelect, closePopover]
     );
 
-    // Use multiplier presets for multiplier trades, standard presets for all other trade types
-    const chipValues = is_multiplier
-        ? TRADE_PARAMETER_PRESETS.stake.multipliers
-        : TRADE_PARAMETER_PRESETS.stake.standard;
+    // Map contract_type to the preset key and get the appropriate stake presets
+    const presetKey = mapContractTypeToStakePresetKey(contract_type);
+    const chipValues = presetKey ? getStakePresets(presetKey) : undefined;
+
+    // Fallback to a default set if no presets found (backward compatibility)
+    const defaultChipValues = [1, 5, 10, 20, 50, 100];
 
     return (
         <ChipsWithInputToggle
             activeTab={active_tab}
-            chipValues={chipValues}
+            chipValues={chipValues || defaultChipValues}
             selectedValue={amount}
             onSelect={handleChipSelectAndClose}
             formatValue={(val: number) => `${val} ${getCurrencyDisplayCode(currency)}`}
@@ -111,7 +114,7 @@ const Stake = observer(({ is_minimized }: TTradeParametersProps) => {
                 amount={amount}
                 currency={currency}
                 is_open={is_open}
-                is_multiplier={is_multiplier}
+                contract_type={contract_type}
                 onChipSelect={handleChipSelect}
             />
         </TradeParameterPopover>

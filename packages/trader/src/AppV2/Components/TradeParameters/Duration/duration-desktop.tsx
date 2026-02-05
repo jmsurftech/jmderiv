@@ -5,7 +5,17 @@ import moment from 'moment';
 import { Text } from '@deriv-com/quill-ui';
 import { Localize, localize } from '@deriv-com/translations';
 
-import { TRADE_PARAMETER_PRESETS } from 'AppV2/Config/trade-parameter-presets';
+import {
+    type DurationPresetsByUnit,
+    type DurationUnit,
+    getDurationPresets,
+    isDurationUnitApplicable,
+} from 'AppV2/Config/trade-parameter-presets';
+import {
+    getSymbolMarketData,
+    mapContractTypeToDurationPresetKey,
+    mapSymbolToMarketCategory,
+} from 'AppV2/Utils/trade-params-preset-utils';
 import { useTraderStore } from 'Stores/useTraderStores';
 
 import { TabSelector } from '../../InputPopover';
@@ -36,6 +46,9 @@ const DurationPopoverContent: React.FC<{
     activeTab: 'chips' | 'input';
     selectedDuration: number;
     availableUnits: string[];
+    contract_type: string;
+    symbol: string;
+    active_symbols: any;
     onDurationSelect: (value: number) => void;
     onHourSelect: (hours: number) => void;
     onEndTimeSelect: (time: string) => void;
@@ -53,6 +66,9 @@ const DurationPopoverContent: React.FC<{
     activeTab,
     selectedDuration,
     availableUnits,
+    contract_type,
+    symbol,
+    active_symbols,
     onDurationSelect,
     onHourSelect,
     onEndTimeSelect,
@@ -119,44 +135,65 @@ const DurationPopoverContent: React.FC<{
     }, []);
 
     const config = useMemo(() => {
+        // Get market category and trade type for preset lookup
+        const symbolData = getSymbolMarketData(symbol, active_symbols);
+        const marketCategory = mapSymbolToMarketCategory(symbolData?.market, symbolData?.submarket, symbolData?.symbol);
+        const tradeTypeKey = mapContractTypeToDurationPresetKey(contract_type);
+
+        // Default chip values for end_time and end_date (not trade-type specific)
+        const defaultEndTimeChips = ['15:00', '16:00', '17:00', '18:00', '19:00', '20:00'];
+        const defaultEndDateChips = [1, 2, 3, 5, 7, 14];
+
+        // Fallback chip values if presets not found
+        const fallbackTicks = [5, 10, 15, 20, 25, 30];
+        const fallbackSeconds = [15, 30, 45, 60, 90, 120];
+        const fallbackMinutes = [1, 2, 3, 5, 10, 15];
+        const fallbackHours = [1, 2, 4, 8, 12, 24];
+
+        // Get presets from config
+        const tickPresets = tradeTypeKey ? getDurationPresets(tradeTypeKey, marketCategory, 't') : undefined;
+        const secondPresets = tradeTypeKey ? getDurationPresets(tradeTypeKey, marketCategory, 's') : undefined;
+        const minutePresets = tradeTypeKey ? getDurationPresets(tradeTypeKey, marketCategory, 'm') : undefined;
+        const hourPresets = tradeTypeKey ? getDurationPresets(tradeTypeKey, marketCategory, 'h') : undefined;
+
         const configs: Record<string, DurationConfig | null> = {
             t: {
-                chipValues: TRADE_PARAMETER_PRESETS.duration.ticks,
+                chipValues: tickPresets || fallbackTicks,
                 selectedValue: selectedDuration,
                 onSelect: handleDurationSelectAndClose as (value: number | string) => void,
                 formatValue: formatTickValue as (value: number | string) => string,
                 inputComponent: <DurationTicksInputDesktop onClose={closePopover} />,
             },
             s: {
-                chipValues: TRADE_PARAMETER_PRESETS.duration.seconds,
+                chipValues: secondPresets || fallbackSeconds,
                 selectedValue: selectedDuration,
                 onSelect: handleDurationSelectAndClose as (value: number | string) => void,
                 formatValue: formatSecondsValue as (value: number | string) => string,
                 inputComponent: <DurationInputDesktop unit='s' onClose={closePopover} />,
             },
             m: {
-                chipValues: TRADE_PARAMETER_PRESETS.duration.minutes,
+                chipValues: minutePresets || fallbackMinutes,
                 selectedValue: selectedDuration,
                 onSelect: handleDurationSelectAndClose as (value: number | string) => void,
                 formatValue: formatMinutesValue as (value: number | string) => string,
                 inputComponent: <DurationInputDesktop unit='m' onClose={closePopover} />,
             },
             h: {
-                chipValues: TRADE_PARAMETER_PRESETS.duration.hours,
+                chipValues: hourPresets || fallbackHours,
                 selectedValue: Math.floor(selectedDuration / 60),
                 onSelect: handleHourSelectAndClose as (value: number | string) => void,
                 formatValue: formatHoursValue as (value: number | string) => string,
                 inputComponent: <DurationHoursInputDesktop onClose={closePopover} />,
             },
             end_time: {
-                chipValues: TRADE_PARAMETER_PRESETS.duration.endTime,
-                selectedValue: TRADE_PARAMETER_PRESETS.duration.endTime[0],
+                chipValues: defaultEndTimeChips,
+                selectedValue: defaultEndTimeChips[0],
                 onSelect: handleEndTimeSelectAndClose as (value: number | string) => void,
                 formatValue: formatEndTimeValue as (value: number | string) => string,
                 inputComponent: <DurationEndTimeDesktop onClose={closePopover} />,
             },
             end_date: {
-                chipValues: TRADE_PARAMETER_PRESETS.duration.endDate,
+                chipValues: defaultEndDateChips,
                 selectedValue: selectedDuration,
                 onSelect: handleEndDateSelectAndClose as (value: number | string) => void,
                 formatValue: formatEndDateValue as (value: number | string) => string,
@@ -167,6 +204,9 @@ const DurationPopoverContent: React.FC<{
     }, [
         selectedUnit,
         selectedDuration,
+        contract_type,
+        symbol,
+        active_symbols,
         handleDurationSelectAndClose,
         handleHourSelectAndClose,
         handleEndTimeSelectAndClose,
@@ -182,8 +222,8 @@ const DurationPopoverContent: React.FC<{
 
     const hasOnlyOneUnit = availableUnits.length === 1;
 
-    // Check if presets are disabled for the current unit
-    const presetsDisabled = TRADE_PARAMETER_PRESETS.durationConfig.disabledPresets.includes(selectedUnit);
+    // Check if presets are disabled for the current unit (end_time and end_date don't use presets from config)
+    const presetsDisabled = selectedUnit === 'end_time' || selectedUnit === 'end_date';
 
     return (
         <div className={`duration-popover__layout ${hasOnlyOneUnit ? 'duration-popover__layout--single-unit' : ''}`}>
@@ -239,10 +279,27 @@ const DurationDesktop: React.FC<DurationDesktopProps> = observer(({ is_minimized
         expiry_type,
         expiry_time,
         expiry_date,
+        contract_type,
+        symbol,
+        active_symbols,
     } = useTraderStore();
 
+    // Get market category for duration preset filtering
+    const marketCategory = React.useMemo(() => {
+        const symbolData = getSymbolMarketData(symbol, active_symbols);
+        return mapSymbolToMarketCategory(symbolData?.market, symbolData?.submarket, symbolData?.symbol);
+    }, [symbol, active_symbols]);
+
+    // Get trade type key for duration presets
+    const tradeTypeKey = React.useMemo(() => {
+        return mapContractTypeToDurationPresetKey(contract_type);
+    }, [contract_type]);
+
     const availableUnits = React.useMemo(() => {
+        // Start with all units from duration_units_list - these are the units available for this contract
+        // We should NOT filter these out based on presets - presets are only for chip values
         const units = duration_units_list.map(unit => unit.value);
+
         // Add end_time and end_date for contracts that support them
         // (they're expiry types, not duration units, so they're not in duration_units_list)
         // Match mobile behavior: only show end_time/end_date when duration_units_list.length > 1
@@ -278,7 +335,6 @@ const DurationDesktop: React.FC<DurationDesktopProps> = observer(({ is_minimized
 
     // Initialize selectedUnit based on current duration_unit or first available unit
     // If duration_unit is an expiry type (like 'endtime'), default to first available unit
-    // [AI]
     // Helper function to get the first valid unit from available units
     const getFirstValidUnit = React.useCallback((units: string[]): string => {
         const validUnits = ['t', 's', 'm', 'h', 'end_time', 'end_date'];
@@ -312,7 +368,6 @@ const DurationDesktop: React.FC<DurationDesktopProps> = observer(({ is_minimized
     }, [duration_unit, expiry_type, expiry_time, expiry_date, availableUnits, getFirstValidUnit]);
 
     const [selectedUnit, setSelectedUnit] = useState(() => getInitialUnit());
-    // [/AI]
     const [selectedDuration, setSelectedDuration] = useState(duration);
     const [activeTab, setActiveTab] = useState<'chips' | 'input'>('chips');
 
@@ -547,6 +602,9 @@ const DurationDesktop: React.FC<DurationDesktopProps> = observer(({ is_minimized
                 activeTab={activeTab}
                 selectedDuration={selectedDuration}
                 availableUnits={availableUnits}
+                contract_type={contract_type}
+                symbol={symbol}
+                active_symbols={active_symbols}
                 onDurationSelect={handleDurationSelect}
                 onHourSelect={handleHourSelect}
                 onEndTimeSelect={handleEndTimeSelect}
