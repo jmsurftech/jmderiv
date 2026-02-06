@@ -6,49 +6,44 @@ import { Localize } from '@deriv-com/translations';
 import { useDevice } from '@deriv-com/ui';
 
 import GuideContainer from './guide-container';
-import DESKTOP_STEPS from './steps-config-desktop';
+import RETURNING_DESKTOP_STEPS from './steps-config-desktop-returning';
 
 import './onboarding-guide-desktop.scss';
 
-type TOnboardingGuideDesktopProps = {
+type TOnboardingGuideDesktopReturningProps = {
     callback?: () => void;
     type?: 'trade_page' | 'positions_page';
 };
 
-const OnboardingGuideDesktop = ({ type = 'trade_page', callback }: TOnboardingGuideDesktopProps) => {
+const OnboardingGuideDesktopReturning = ({ type = 'trade_page', callback }: TOnboardingGuideDesktopReturningProps) => {
     const { isDesktop } = useDevice();
     const [is_modal_open, setIsModalOpen] = React.useState(false);
     const [should_run_guide, setShouldRunGuide] = React.useState(false);
     const guide_timeout_ref = React.useRef<ReturnType<typeof setTimeout>>();
 
-    // Desktop onboarding uses its own key, separate from mobile
-    const [guide_dtrader_v2_desktop, setGuideDtraderV2Desktop] = useLocalStorageData<Record<string, boolean>>(
-        'guide_dtrader_v2_desktop',
-        {
-            trade_page: false,
-            positions_page: false,
-        }
-    );
+    // Returning-user desktop onboarding key
+    const [guide_dtrader_v2_desktop_returning, setGuideDtraderV2DesktopReturning] = useLocalStorageData<
+        Record<string, boolean>
+    >('guide_dtrader_v2_desktop_returning', {
+        trade_page: false,
+        positions_page: false,
+    });
 
-    // Read the mobile key to check if user already saw the mobile onboarding
+    // Check mobile onboarding key (must have seen it)
     const [guide_dtrader_v2] = useLocalStorageData<Record<string, boolean>>('guide_dtrader_v2', {
         trade_types_selection: false,
         trade_page: false,
         positions_page: false,
     });
 
-    // Read the returning-user desktop key to avoid showing both onboardings
-    const [guide_dtrader_v2_desktop_returning] = useLocalStorageData<Record<string, boolean>>(
-        'guide_dtrader_v2_desktop_returning',
-        {
-            trade_page: false,
-            positions_page: false,
-        }
-    );
+    // Check new-user desktop onboarding key (must NOT have seen it)
+    const [guide_dtrader_v2_desktop] = useLocalStorageData<Record<string, boolean>>('guide_dtrader_v2_desktop', {
+        trade_page: false,
+        positions_page: false,
+    });
 
-    // Only show desktop onboarding to truly new users who haven't seen any onboarding
     const has_seen_mobile_onboarding = !!guide_dtrader_v2?.[type];
-    const has_seen_desktop_onboarding = !!guide_dtrader_v2_desktop?.[type];
+    const has_seen_new_user_desktop_onboarding = !!guide_dtrader_v2_desktop?.[type];
     const has_seen_returning_desktop_onboarding = !!guide_dtrader_v2_desktop_returning?.[type];
 
     const onGuideStart = React.useCallback(() => {
@@ -58,29 +53,38 @@ const OnboardingGuideDesktop = ({ type = 'trade_page', callback }: TOnboardingGu
 
     const onFinishGuide = React.useCallback(() => {
         setShouldRunGuide(false);
-        setGuideDtraderV2Desktop({ ...guide_dtrader_v2_desktop, [type]: true });
+        setGuideDtraderV2DesktopReturning({ ...guide_dtrader_v2_desktop_returning, [type]: true });
         callback?.();
         // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [setGuideDtraderV2Desktop, type]);
+    }, [setGuideDtraderV2DesktopReturning, type]);
 
     const onSkipGuide = React.useCallback(() => {
         setIsModalOpen(false);
-        setGuideDtraderV2Desktop({ ...guide_dtrader_v2_desktop, [type]: true });
+        setGuideDtraderV2DesktopReturning({ ...guide_dtrader_v2_desktop_returning, [type]: true });
         callback?.();
         // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [setGuideDtraderV2Desktop, type]);
+    }, [setGuideDtraderV2DesktopReturning, type]);
 
     React.useEffect(() => {
         if (!isDesktop) return;
 
-        // Show only for new users who haven't seen any onboarding (mobile, desktop, or returning)
-        if (!has_seen_mobile_onboarding && !has_seen_desktop_onboarding && !has_seen_returning_desktop_onboarding) {
+        // Show only for returning users: saw mobile onboarding, didn't see either desktop onboarding
+        if (
+            has_seen_mobile_onboarding &&
+            !has_seen_new_user_desktop_onboarding &&
+            !has_seen_returning_desktop_onboarding
+        ) {
             guide_timeout_ref.current = setTimeout(() => setIsModalOpen(true), 800);
         }
 
         return () => clearTimeout(guide_timeout_ref.current);
         // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [has_seen_mobile_onboarding, has_seen_desktop_onboarding, has_seen_returning_desktop_onboarding, isDesktop]);
+    }, [
+        has_seen_mobile_onboarding,
+        has_seen_new_user_desktop_onboarding,
+        has_seen_returning_desktop_onboarding,
+        isDesktop,
+    ]);
 
     if (!isDesktop) return null;
 
@@ -97,16 +101,20 @@ const OnboardingGuideDesktop = ({ type = 'trade_page', callback }: TOnboardingGu
             >
                 <Modal.Body className='onboarding-guide-desktop__body'>
                     <h2 className='onboarding-guide-desktop__title'>
-                        <Localize i18n_default_text='Welcome to the new Deriv Trader' />
+                        <Localize i18n_default_text="What's new in Deriv Trader" />
                     </h2>
                     <p className='onboarding-guide-desktop__description'>
-                        <Localize i18n_default_text="Enjoy a smoother, more intuitive trading experience. Here's a quick tour to get you started." />
+                        <Localize i18n_default_text="We've updated the trading experience to make it smoother and easier to use." />
                     </p>
                 </Modal.Body>
             </Modal>
-            <GuideContainer should_run={should_run_guide} onFinishGuide={onFinishGuide} custom_steps={DESKTOP_STEPS} />
+            <GuideContainer
+                should_run={should_run_guide}
+                onFinishGuide={onFinishGuide}
+                custom_steps={RETURNING_DESKTOP_STEPS}
+            />
         </React.Fragment>
     );
 };
 
-export default React.memo(OnboardingGuideDesktop);
+export default React.memo(OnboardingGuideDesktopReturning);
