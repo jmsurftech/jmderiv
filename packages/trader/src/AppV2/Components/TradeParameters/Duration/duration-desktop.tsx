@@ -307,49 +307,63 @@ const DurationDesktop: React.FC<DurationDesktopProps> = observer(({ is_minimized
     }, []);
 
     const getInitialUnit = React.useCallback(() => {
-        // Special case: 'd' (days) maps to 'end_time' (combined date+time picker)
+        // Priority 1: If expiry_type is 'endtime', always show end_time tab
+        if (expiry_type === 'endtime') {
+            return 'end_time';
+        }
+
+        // Priority 2: Special case: 'd' (days) maps to 'end_time' (combined date+time picker)
         if (duration_unit === 'd') {
             return 'end_time';
         }
-        // Check if current duration_unit is in available units AND has a valid config
+
+        // Priority 3: Detect if current duration represents Hours
+        // Hours are stored as duration_unit: 'm' with duration >= 60
+        // Check if it's likely hours (duration is 60 or more minutes AND 'h' is available)
+        if (duration_unit === 'm' && duration >= 60 && availableUnits.includes('h')) {
+            return 'h';
+        }
+
+        // Priority 4: Check if current duration_unit is in available units AND has a valid config
         if (availableUnits.includes(duration_unit)) {
             const validUnits = ['t', 's', 'm', 'h', 'end_time'];
             if (validUnits.includes(duration_unit)) {
                 return duration_unit;
             }
         }
-        // If expiry_type is 'endtime', use end_time (combined date+time picker)
-        if (expiry_type === 'endtime') {
-            return 'end_time';
-        }
+
         // Default to first valid unit from available units
         return getFirstValidUnit(availableUnits);
-    }, [duration_unit, expiry_type, availableUnits, getFirstValidUnit]);
+    }, [duration_unit, duration, expiry_type, availableUnits, getFirstValidUnit]);
 
     const [selectedUnit, setSelectedUnit] = useState(() => getInitialUnit());
     const [selectedDuration, setSelectedDuration] = useState(duration);
     const [activeTab, setActiveTab] = useState<'chips' | 'input'>('chips');
 
     const handleOpenPopover = useCallback(() => {
-        // Use the same logic as getInitialUnit to determine which unit to show
-        let unitToShow = duration_unit;
+        // Determine which unit to show based on current state
+        let unitToShow: string;
         const validUnits = ['t', 's', 'm', 'h', 'end_time'];
 
-        // Special case: 'd' (days) maps to 'end_time' (combined date+time picker)
-        if (duration_unit === 'd') {
+        // Priority 1: If expiry_type is 'endtime', always show end_time tab
+        if (expiry_type === 'endtime') {
             unitToShow = 'end_time';
         }
-        // If duration_unit is not in available units (e.g., it's an expiry type)
-        else if (!availableUnits.includes(duration_unit)) {
-            // If expiry_type is 'endtime', use end_time (combined date+time picker)
-            if (expiry_type === 'endtime') {
-                unitToShow = 'end_time';
-            } else {
-                // Default to first valid unit from available units
-                unitToShow = getFirstValidUnit(availableUnits);
-            }
-        } else if (!validUnits.includes(duration_unit)) {
-            // If duration_unit is in available units but doesn't have a valid config
+        // Priority 2: Special case: 'd' (days) maps to 'end_time'
+        else if (duration_unit === 'd') {
+            unitToShow = 'end_time';
+        }
+        // Priority 3: Detect if current duration represents Hours
+        // Hours are stored as duration_unit: 'm' with duration >= 60
+        else if (duration_unit === 'm' && duration >= 60 && availableUnits.includes('h')) {
+            unitToShow = 'h';
+        }
+        // Priority 4: Use current duration_unit if valid
+        else if (availableUnits.includes(duration_unit) && validUnits.includes(duration_unit)) {
+            unitToShow = duration_unit;
+        }
+        // Default to first valid unit
+        else {
             unitToShow = getFirstValidUnit(availableUnits);
         }
 
