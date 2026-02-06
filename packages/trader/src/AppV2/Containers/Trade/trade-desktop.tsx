@@ -145,6 +145,7 @@ const TradeDesktop = observer(() => {
                             <TradeParamsFooter />
                         </div>
                     </div>
+                    {/* OnboardingGuide now only shows for mobile users */}
                     {!guide_dtrader_v2?.trade_page && is_logged_in && <OnboardingGuide type='trade_page' />}
                 </React.Fragment>
             ) : (

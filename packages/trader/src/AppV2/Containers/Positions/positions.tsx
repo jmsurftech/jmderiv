@@ -88,6 +88,7 @@ const Positions = observer(() => {
                 </Tab.Container>
             </div>
             {/* TODO: Remove isBridgeAvailable check when onboarding video with Accumulators is available*/}
+            {/* OnboardingGuide now only shows for mobile users */}
             {!guide_dtrader_v2?.positions_page && is_logged_in && !isBridgeAvailable && (
                 <OnboardingGuide
                     type='positions_page'

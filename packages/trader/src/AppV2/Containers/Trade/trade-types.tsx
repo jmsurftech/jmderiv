@@ -375,6 +375,7 @@ const TradeTypes = ({ contract_type, onTradeTypeSelect, trade_types, is_dark_mod
                     )}
                 </ActionSheet.Portal>
             </ActionSheet.Root>
+            {/* TradeTypesSelectionGuide now only shows for mobile users */}
             {is_open && <TradeTypesSelectionGuide is_dark_mode_on={is_dark_mode_on} />}
             {is_guide_open && (
                 <Guide
