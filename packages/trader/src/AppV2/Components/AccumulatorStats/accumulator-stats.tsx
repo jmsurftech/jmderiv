@@ -121,9 +121,6 @@ const AccumulatorStats = observer(() => {
 
         if (rows[0] && rows[0].length > 0) {
             setAnimationClass('');
-            clearTimeout(success_timeout);
-            clearTimeout(error_timeout);
-            clearTimeout(transition_timeout);
 
             const is_same_value = last_value_ref.current === rows[0][1];
 
