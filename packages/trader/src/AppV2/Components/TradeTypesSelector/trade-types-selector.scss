@@ -1,4 +1,4 @@
-$trade-types-modal-height: 65rem;
+$trade-types-modal-height: 67rem;
 
 .trade-types-selector {
     display: inline-flex;
@@ -54,6 +54,7 @@ $trade-types-modal-height: 65rem;
     }
 
     &__popover {
+        padding: var(--core-spacing-400);
         .input-popover__content {
             padding: 0;
             max-height: $trade-types-modal-height;
@@ -66,6 +67,7 @@ $trade-types-modal-height: 65rem;
         display: flex;
         flex-direction: column;
         padding: 0;
+        gap: var(--core-spacing-400);
         overflow: hidden;
     }
 
@@ -73,7 +75,7 @@ $trade-types-modal-height: 65rem;
         display: flex;
         justify-content: space-between;
         align-items: center;
-        margin-bottom: 1.6rem;
+        padding: var(--core-spacing-400) var(--core-spacing-400) 0;
     }
 
     &__guide-button {
@@ -101,9 +103,9 @@ $trade-types-modal-height: 65rem;
     &__tabs {
         display: flex;
         gap: 2rem;
-        margin-bottom: 0;
         border-bottom: 1px solid var(--semantic-color-monochrome-border-normal-mid);
         position: relative;
+        padding: 0 var(--core-spacing-400);
     }
 
     &__tab {
@@ -139,22 +141,12 @@ $trade-types-modal-height: 65rem;
 
     &__content {
         flex: 1;
+        margin-top: var(--core-spacing-400);
+        scrollbar-width: none; /* Firefox */
+        -ms-overflow-style: none; /* IE/Edge */
 
         &::-webkit-scrollbar {
-            width: 0.4rem;
-        }
-
-        &::-webkit-scrollbar-track {
-            background: transparent;
-        }
-
-        &::-webkit-scrollbar-thumb {
-            background: var(--semantic-color-slate-solid-surface-frame-mid);
-            border-radius: var(--semantic-borderRadius-sm);
-
-            &:hover {
-                background: var(--semantic-color-slate-solid-surface-frame-high);
-            }
+            display: none; /* Chrome, Safari, Opera */
         }
     }
 
@@ -164,6 +156,7 @@ $trade-types-modal-height: 65rem;
         margin: 0;
         display: block;
         font-size: 1.2rem;
+        padding: 0 var(--core-spacing-400);
     }
 
     &__items {
