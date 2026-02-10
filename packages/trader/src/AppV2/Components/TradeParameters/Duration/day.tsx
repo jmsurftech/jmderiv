@@ -147,12 +147,9 @@ const DayInput = ({
         year: 'numeric',
         timeZone: 'GMT',
     });
-    const formatted_current_date = new Date().toLocaleDateString('en-GB', {
-        day: 'numeric',
-        month: 'short',
-        year: 'numeric',
-        timeZone: 'GMT',
-    });
+    const today_local = new Date();
+    const today_date_string = `${today_local.getFullYear()}-${String(today_local.getMonth() + 1).padStart(2, '0')}-${String(today_local.getDate()).padStart(2, '0')}`;
+    const is_selected_date_today = selected_expiry_date === today_date_string;
 
     React.useEffect(() => {
         const updateCurrentGmtTime = () => {
@@ -167,7 +164,7 @@ const DayInput = ({
 
     useEffect(() => {
         // Simple logic: set time based on whether date is today or future
-        const is_today = formatted_date === formatted_current_date;
+        const is_today = is_selected_date_today;
         const time_to_set = is_today ? adjusted_start_time : '23:59:59';
 
         setBrowsingExpiryTime(time_to_set);
@@ -245,9 +242,7 @@ const DayInput = ({
                     <Localize i18n_default_text='Expiry' />
                 </Text>
                 <Text size='sm'>{`
-                ${formatted_date}, ${
-                    formatted_date === formatted_current_date ? browsing_expiry_time : '23:59:59'
-                } GMT`}</Text>
+                ${formatted_date}, ${is_selected_date_today ? browsing_expiry_time : '23:59:59'} GMT`}</Text>
             </div>
             <ActionSheet.Root
                 isOpen={open || open_timepicker}

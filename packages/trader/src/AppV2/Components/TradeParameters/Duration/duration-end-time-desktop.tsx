@@ -55,19 +55,12 @@ const DurationEndTimeDesktop: React.FC<DurationEndTimeDesktopProps> = observer((
 
     // Helper to check if a date is today
     const isToday = useCallback((date: Date) => {
-        const formatted_date = date.toLocaleDateString('en-GB', {
-            day: 'numeric',
-            month: 'short',
-            year: 'numeric',
-            timeZone: 'GMT',
-        });
-        const formatted_current_date = new Date().toLocaleDateString('en-GB', {
-            day: 'numeric',
-            month: 'short',
-            year: 'numeric',
-            timeZone: 'GMT',
-        });
-        return formatted_date === formatted_current_date;
+        const today = new Date();
+        return (
+            date.getDate() === today.getDate() &&
+            date.getMonth() === today.getMonth() &&
+            date.getFullYear() === today.getFullYear()
+        );
     }, []);
 
     // Helper to get initial date
