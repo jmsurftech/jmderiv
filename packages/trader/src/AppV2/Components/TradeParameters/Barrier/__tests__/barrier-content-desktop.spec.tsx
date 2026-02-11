@@ -1,11 +1,28 @@
 import { mockStore } from '@deriv/stores';
-import { render, screen } from '@testing-library/react';
+import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 
+import { useProposal } from 'AppV2/Hooks/useProposal';
 import ModulesProvider from 'Stores/Providers/modules-providers';
 
 import TraderProviders from '../../../../../trader-providers';
 import BarrierContentDesktop from '../barrier-content-desktop';
+
+jest.mock('@deriv/api-v2', () => ({
+    useDebounce: jest.fn((value: unknown) => value),
+}));
+
+jest.mock('AppV2/Hooks/useProposal', () => ({
+    useProposal: jest.fn(() => ({
+        data: { proposal: {} },
+        error: null,
+        isFetching: false,
+    })),
+}));
+
+jest.mock('AppV2/Utils/trade-types-utils', () => ({
+    getDisplayedContractTypes: jest.fn(() => ['CALL']),
+}));
 
 describe('BarrierContentDesktop', () => {
     let default_mock_store: ReturnType<typeof mockStore>;
@@ -22,10 +39,18 @@ describe('BarrierContentDesktop', () => {
                         pip_size: 2,
                     },
                     onChange: jest.fn(),
+                    contract_type: 'CALL',
+                    trade_type_tab: '',
+                    trade_types: { CALL: 'Higher' },
                 },
             },
         });
         jest.clearAllMocks();
+        (useProposal as jest.Mock).mockReturnValue({
+            data: { proposal: {} },
+            error: null,
+            isFetching: false,
+        });
     });
 
     const MockedBarrierContentDesktop = ({
@@ -149,7 +174,7 @@ describe('BarrierContentDesktop', () => {
         });
     });
 
-    it('calls onClose when Save is clicked', async () => {
+    it('calls onClose when Save is clicked with valid value', async () => {
         render(<MockedBarrierContentDesktop />);
 
         await userEvent.click(screen.getByText('Save'));
@@ -176,5 +201,129 @@ describe('BarrierContentDesktop', () => {
         render(<MockedBarrierContentDesktop />);
 
         expect(screen.getByText('0')).toBeInTheDocument();
+    });
+
+    // Validation tests
+    it('shows required field error when input is cleared', async () => {
+        render(<MockedBarrierContentDesktop barrierType='above_spot' />);
+
+        const input = screen.getByPlaceholderText('Distance to spot');
+        await userEvent.clear(input);
+
+        await waitFor(() => {
+            expect(screen.getByText('Barrier is a required field.')).toBeInTheDocument();
+        });
+    });
+
+    it('shows error for zero value', async () => {
+        render(<MockedBarrierContentDesktop barrierType='above_spot' />);
+
+        const input = screen.getByPlaceholderText('Distance to spot');
+        await userEvent.clear(input);
+        await userEvent.type(input, '0');
+
+        await waitFor(() => {
+            expect(screen.getByText('Barrier cannot be zero.')).toBeInTheDocument();
+        });
+    });
+
+    it('shows error for incomplete decimal', async () => {
+        render(<MockedBarrierContentDesktop barrierType='above_spot' />);
+
+        const input = screen.getByPlaceholderText('Distance to spot');
+        await userEvent.clear(input);
+        await userEvent.type(input, '1.');
+
+        await waitFor(() => {
+            expect(screen.getByText('Please enter a complete number.')).toBeInTheDocument();
+        });
+    });
+
+    it('disables Save button when validation error exists', async () => {
+        render(<MockedBarrierContentDesktop barrierType='above_spot' />);
+
+        const input = screen.getByPlaceholderText('Distance to spot');
+        await userEvent.clear(input);
+
+        await waitFor(() => {
+            expect(screen.getByRole('button', { name: /save/i })).toBeDisabled();
+        });
+    });
+
+    it('does not call onChange when Save is clicked with validation error', async () => {
+        render(<MockedBarrierContentDesktop barrierType='above_spot' />);
+
+        const input = screen.getByPlaceholderText('Distance to spot');
+        await userEvent.clear(input);
+        await userEvent.type(input, '0');
+
+        await waitFor(() => {
+            expect(screen.getByText('Barrier cannot be zero.')).toBeInTheDocument();
+        });
+
+        await userEvent.click(screen.getByText('Save'));
+
+        expect(default_mock_store.modules.trade.onChange).not.toHaveBeenCalled();
+    });
+
+    it('does not call onClose when Save is clicked with validation error', async () => {
+        render(<MockedBarrierContentDesktop barrierType='above_spot' />);
+
+        const input = screen.getByPlaceholderText('Distance to spot');
+        await userEvent.clear(input);
+
+        await waitFor(() => {
+            expect(screen.getByText('Barrier is a required field.')).toBeInTheDocument();
+        });
+
+        await userEvent.click(screen.getByText('Save'));
+
+        expect(mockOnClose).not.toHaveBeenCalled();
+    });
+
+    it('shows API error when proposal returns barrier error', async () => {
+        (useProposal as jest.Mock).mockReturnValue({
+            data: null,
+            error: {
+                message: 'Barrier is not valid',
+                details: { field: 'barrier' },
+            },
+            isFetching: false,
+        });
+
+        render(<MockedBarrierContentDesktop barrierType='above_spot' />);
+
+        await waitFor(() => {
+            expect(screen.getByText('Barrier is not valid')).toBeInTheDocument();
+        });
+    });
+
+    it('disables Save button when proposal is loading', () => {
+        (useProposal as jest.Mock).mockReturnValue({
+            data: null,
+            error: null,
+            isFetching: true,
+        });
+
+        render(<MockedBarrierContentDesktop barrierType='above_spot' />);
+
+        expect(screen.getByRole('button', { name: /save/i })).toBeDisabled();
+    });
+
+    it('clears validation error when valid value is entered after error', async () => {
+        render(<MockedBarrierContentDesktop barrierType='above_spot' />);
+
+        const input = screen.getByPlaceholderText('Distance to spot');
+        await userEvent.clear(input);
+
+        await waitFor(() => {
+            expect(screen.getByText('Barrier is a required field.')).toBeInTheDocument();
+        });
+
+        await userEvent.type(input, '1.5');
+
+        await waitFor(() => {
+            expect(screen.queryByText('Barrier is a required field.')).not.toBeInTheDocument();
+        });
     });
 });
