@@ -12,7 +12,7 @@ const Trade = () => {
         <React.Fragment>
             {isMobile ? <TradeMobile /> : <TradeDesktop />}
             <ServiceErrorSheet />
-            <ClosedMarketMessage />
+            {isMobile && <ClosedMarketMessage />}
         </React.Fragment>
     );
 };
