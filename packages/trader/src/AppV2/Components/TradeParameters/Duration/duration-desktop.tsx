@@ -243,6 +243,7 @@ const DurationPopoverContent: React.FC<{
                             config.inputComponent
                         ) : (
                             <ChipsWithInputToggle
+                                key={selectedUnit}
                                 activeTab={activeTab}
                                 chipValues={config.chipValues as number[]}
                                 selectedValue={config.selectedValue as number}
@@ -376,8 +377,22 @@ const DurationDesktop: React.FC<DurationDesktopProps> = observer(({ is_minimized
         return getFirstValidUnit(availableUnits);
     }, [duration_unit, duration, expiry_type, availableUnits, getFirstValidUnit]);
 
+    // Compute the effective stored unit from current store values.
+    // Extracted as a function so it can be called from both state initializer and handleOpenPopover.
+    const getEffectiveStoredUnit = React.useCallback(() => {
+        if (expiry_type === 'endtime') return 'end_time';
+        if (duration_unit === 'd') return 'end_time';
+        if (duration_unit === 'm' && duration >= 60 && availableUnits.includes('h')) return 'h';
+        return duration_unit;
+    }, [expiry_type, duration_unit, duration, availableUnits]);
+
     const [selectedUnit, setSelectedUnit] = useState(() => getInitialUnit());
     const [selectedDuration, setSelectedDuration] = useState(duration);
+    // Local state tracking which unit the selectedDuration belongs to.
+    // Unlike a store-derived useMemo, this only updates at controlled moments
+    // (popover open + chip selection), preventing brief flashes when the async
+    // store processing in onChangeMultiple temporarily reverts duration_unit.
+    const [selectedDurationUnit, setSelectedDurationUnit] = useState(() => getEffectiveStoredUnit());
     const [activeTab, setActiveTab] = useState<'chips' | 'input'>('chips');
 
     const handleOpenPopover = useCallback(() => {
@@ -409,31 +424,13 @@ const DurationDesktop: React.FC<DurationDesktopProps> = observer(({ is_minimized
 
         setSelectedUnit(unitToShow);
         setSelectedDuration(duration);
+        setSelectedDurationUnit(getEffectiveStoredUnit());
         setActiveTab('chips'); // Always start with chips tab
-    }, [duration, duration_unit, expiry_type, availableUnits, getFirstValidUnit]);
+    }, [duration, duration_unit, expiry_type, availableUnits, getFirstValidUnit, getEffectiveStoredUnit]);
 
     const handleClosePopover = useCallback(() => {
         setActiveTab('chips'); // Reset to chips tab on close
     }, []);
-
-    // Compute the "stored unit" - the unit that the duration was originally stored in
-    // This is used to only highlight chips for the correct unit
-    const storedUnit = React.useMemo(() => {
-        // Priority 1: If expiry_type is 'endtime', stored unit is end_time
-        if (expiry_type === 'endtime') {
-            return 'end_time';
-        }
-        // Priority 2: 'd' (days) maps to end_time
-        if (duration_unit === 'd') {
-            return 'end_time';
-        }
-        // Priority 3: Detect if duration represents hours (stored as minutes >= 60)
-        if (duration_unit === 'm' && duration >= 60 && availableUnits.includes('h')) {
-            return 'h';
-        }
-        // Priority 4: Use the actual duration_unit
-        return duration_unit;
-    }, [expiry_type, duration_unit, duration, availableUnits]);
 
     const handleUnitSelect = useCallback(
         (unit: string) => {
@@ -461,6 +458,7 @@ const DurationDesktop: React.FC<DurationDesktopProps> = observer(({ is_minimized
     const handleDurationSelect = useCallback(
         (value: number) => {
             setSelectedDuration(value);
+            setSelectedDurationUnit(selectedUnit);
             // Apply the change immediately based on selected unit
             onChangeMultiple({
                 duration_unit: selectedUnit,
@@ -475,6 +473,7 @@ const DurationDesktop: React.FC<DurationDesktopProps> = observer(({ is_minimized
         (hours: number) => {
             const totalMinutes = hours * 60;
             setSelectedDuration(totalMinutes);
+            setSelectedDurationUnit('h');
             // Save as minutes
             onChangeMultiple({
                 duration_unit: 'm',
@@ -518,6 +517,7 @@ const DurationDesktop: React.FC<DurationDesktopProps> = observer(({ is_minimized
 
     const handleEndTimeSelect = useCallback(
         (time: string) => {
+            setSelectedDurationUnit('end_time');
             onChangeMultiple({
                 expiry_type: 'endtime',
                 expiry_time: time,
@@ -608,7 +608,7 @@ const DurationDesktop: React.FC<DurationDesktopProps> = observer(({ is_minimized
         >
             <DurationPopoverContent
                 selectedUnit={selectedUnit}
-                storedUnit={storedUnit}
+                storedUnit={selectedDurationUnit}
                 activeTab={activeTab}
                 selectedDuration={selectedDuration}
                 availableUnits={availableUnits}
