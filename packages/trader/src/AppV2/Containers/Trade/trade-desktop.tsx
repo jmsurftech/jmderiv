@@ -6,15 +6,16 @@ import { useLocalStorageData } from '@deriv/api';
 import { Loading } from '@deriv/components';
 import { getSymbolDisplayName, trackAnalyticsEvent } from '@deriv/shared';
 import { useStore } from '@deriv/stores';
+import { Loader } from '@deriv-com/ui';
 
 import AccountHeader from 'AppV2/Components/AccountHeader';
 import AccumulatorStats from 'AppV2/Components/AccumulatorStats';
+import ClosedMarketMessage from 'AppV2/Components/ClosedMarketMessage';
 import Guide from 'AppV2/Components/Guide';
 import OnboardingGuide, {
     OnboardingGuideDesktop,
     OnboardingGuideDesktopReturning,
 } from 'AppV2/Components/OnboardingGuide/GuideForPages';
-import ClosedMarketMessage from 'AppV2/Components/ClosedMarketMessage';
 import PurchaseButton from 'AppV2/Components/PurchaseButton';
 import TradeErrorSnackbar from 'AppV2/Components/TradeErrorSnackbar';
 import { TradeParameters } from 'AppV2/Components/TradeParameters';
@@ -23,6 +24,7 @@ import TradeParamsFooter from 'AppV2/Components/TradeParamsFooter';
 // import MarketSelector from 'AppV2/Components/MarketSelector';
 import useContractsFor from 'AppV2/Hooks/useContractsFor';
 import useDefaultSymbol from 'AppV2/Hooks/useDefaultSymbol';
+import useTabletLandscape from 'AppV2/Hooks/useTabletLandscape';
 import { getDisplayedContractTypes } from 'AppV2/Utils/trade-types-utils';
 import { useTraderStore } from 'Stores/useTraderStores';
 
@@ -43,17 +45,22 @@ const TradeDesktop = observer(() => {
         contract_type,
         is_accumulator,
         is_multiplier,
+        is_chart_loading,
         is_market_closed,
         onChange,
         onMount,
         onUnmount,
-        symbol,
         proposal_info,
+        should_show_active_symbols_loading,
         trade_types: trade_types_store,
         trade_type_tab,
     } = useTraderStore();
     const { trade_types } = useContractsFor();
     useDefaultSymbol(); // This will initialize and set the default symbol
+    const { should_show_portrait_loader } = useTabletLandscape({
+        is_chart_loading,
+        should_show_active_symbols_loading,
+    });
     const [guide_dtrader_v2] = useLocalStorageData<Record<string, boolean>>('guide_dtrader_v2', {
         trade_types_selection: false,
         trade_page: false,
@@ -121,6 +128,7 @@ const TradeDesktop = observer(() => {
                 'trade-container-v2--flyout-open': active_sidebar_flyout !== null,
             })}
         >
+            {should_show_portrait_loader && <Loader isFullScreen />}
             {symbols.length && trade_types.length ? (
                 <React.Fragment>
                     <div className='trade-container-v2__header'>
