@@ -14,6 +14,7 @@ import { Localize, useTranslations } from '@deriv-com/translations';
 import useIsVirtualKeyboardOpen from 'AppV2/Hooks/useIsVirtualKeyboardOpen';
 import { useProposal } from 'AppV2/Hooks/useProposal';
 import { getSnackBarText } from 'AppV2/Utils/trade-params-utils';
+import { ExpandedProposal } from 'Stores/Modules/Trading/Helpers/proposal';
 import { useTraderStore } from 'Stores/useTraderStores';
 
 type TTakeProfitStopLossDesktopProps = {
@@ -120,13 +121,18 @@ const TakeProfitStopLossDesktop = observer(({ onClose, is_open }: TTakeProfitSto
     const tp_proposal_values = {
         has_take_profit: tp_state.is_enabled,
         take_profit: tp_state.is_enabled ? tp_state.input_value : '',
+        has_cancellation: false,
     };
 
-    const { error: tp_proposal_error, isFetching: tp_is_loading } = useProposal({
+    const {
+        data: tp_response,
+        error: tp_proposal_error,
+        isFetching: tp_is_loading,
+    } = useProposal({
         trade_store,
         proposal_request_values: tp_proposal_values,
         contract_type: Object.keys(trade_types)[0],
-        is_enabled: is_open && tp_state.is_enabled && tp_state.input_value !== '',
+        is_enabled: is_open && tp_state.is_enabled,
         should_skip_validation: 'stop_loss',
     });
 
@@ -134,13 +140,18 @@ const TakeProfitStopLossDesktop = observer(({ onClose, is_open }: TTakeProfitSto
     const sl_proposal_values = {
         has_stop_loss: sl_state.is_enabled,
         stop_loss: sl_state.is_enabled ? sl_state.input_value : '',
+        has_cancellation: false,
     };
 
-    const { error: sl_proposal_error, isFetching: sl_is_loading } = useProposal({
+    const {
+        data: sl_response,
+        error: sl_proposal_error,
+        isFetching: sl_is_loading,
+    } = useProposal({
         trade_store,
         proposal_request_values: sl_proposal_values,
         contract_type: Object.keys(trade_types)[0],
-        is_enabled: is_open && sl_state.is_enabled && sl_state.input_value !== '',
+        is_enabled: is_open && sl_state.is_enabled,
         should_skip_validation: 'take_profit',
     });
 
@@ -171,6 +182,32 @@ const TakeProfitStopLossDesktop = observer(({ onClose, is_open }: TTakeProfitSto
 
         setSlState(prev => ({ ...prev, error_text: is_error_field_match ? new_error : '' }));
     }, [sl_proposal_error, sl_state.is_enabled, sl_state.input_value]);
+
+    // Recovery for min/max validation params from proposal response
+    // when the store's params are missing (e.g. after DC was enabled and cleared TP/SL state)
+    React.useEffect(() => {
+        const proposal = tp_response?.proposal as ExpandedProposal | undefined;
+        const tp_validation = proposal?.validation_params?.take_profit;
+        if (tp_validation && (!tp_state.min_value || !tp_state.max_value)) {
+            setTpState(prev => ({
+                ...prev,
+                min_value: tp_validation.min || prev.min_value,
+                max_value: tp_validation.max || prev.max_value,
+            }));
+        }
+    }, [tp_response]);
+
+    React.useEffect(() => {
+        const proposal = sl_response?.proposal as ExpandedProposal | undefined;
+        const sl_validation = proposal?.validation_params?.stop_loss;
+        if (sl_validation && (!sl_state.min_value || !sl_state.max_value)) {
+            setSlState(prev => ({
+                ...prev,
+                min_value: sl_validation.min || prev.min_value,
+                max_value: sl_validation.max || prev.max_value,
+            }));
+        }
+    }, [sl_response]);
 
     const onTpToggle = (is_enabled: boolean) => {
         setTpState(prev => ({ ...prev, is_enabled }));
