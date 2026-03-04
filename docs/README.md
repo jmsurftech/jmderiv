@@ -3,7 +3,6 @@
 > A modern platform for derivatives trading with a modular, component-based architecture.
 
 ![Prerequisite](https://img.shields.io/badge/node-20.x-blue.svg)
-![Prerequisite](https://img.shields.io/badge/npm-9.x-blue.svg)
 
 ## Table of Contents
 
@@ -30,7 +29,6 @@
 Before working with this repository, ensure you have the following installed:
 
 - **Node.js 20.x**
-- **npm 9.x**
 - **git** (for contribution)
 
 ### Installation
@@ -224,6 +222,8 @@ There are two types of releases:
 
 ## Additional Documentation
 
-- [Stylesheet Guidelines](../docs/Stylesheet/README.md) - CSS/SASS code style
-- [JavaScript Guidelines](../docs/JavaScript/README.md) - JS/JSX code style
-- [Git Workflow](../docs/git/README.md) - Git practices and processes
+- [Stylesheet Guidelines](./Stylesheet/README.md) - CSS/SASS code style
+- [JavaScript Guidelines](./JavaScript/README.md) - JS/JSX code style
+- [Git Workflow](./git/README.md) - Git practices and processes
+- [Architecture Analysis](./architecture/architecture-analysis.md) - System architecture, module dependencies, and patterns
+- [SmartCharts Champion Adapter](./charts/smartcharts-champion-adapter-comprehensive-guide.md) - Chart adapter implementation guide

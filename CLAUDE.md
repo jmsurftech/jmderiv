@@ -46,12 +46,12 @@ function exampleFunction() {
 npm run bootstrap
 
 # Start development server for core package
-npm run serve --workspace=@deriv/core
+npm run serve core
 # Runs at https://localhost:8443
 
 # Start specific package
-npm run serve --workspace=@deriv/trader
-npm run serve --workspace=@deriv/reports
+npm run serve trader
+npm run serve reports
 
 # Build all packages
 npm run build:all
@@ -131,9 +131,9 @@ RootStore (root)
 ├── modules: ModulesStore        # Feature-specific stores (Trading, Reports)
 ├── notifications: NotificationStore  # Toast/notification queue
 ├── portfolio: PortfolioStore    # Open positions, balance
-├── active_symbols: ActiveSymbolsStore  # Market data
 ├── contract_trade: ContractTradeStore  # Contract state
 ├── contract_replay: ContractReplayStore # Replay functionality
+├── chart_barrier_store: ChartBarrierStore  # Chart barrier management
 ├── traders_hub: TradersHubStore # Hub/dashboard state
 └── gtm: GTMStore               # Analytics tracking
 ```
@@ -561,18 +561,21 @@ src/components/
 
 - `StoreProvider` - Context provider
 - `useStore()` - Hook to access stores
-- `observer` - MobX observer HOC
-- `BaseStore` - With localStorage persistence
+- `observer` - MobX observer HOC (re-exported from `mobx-react-lite`)
+- `mockStore` - Test utility for mocking store
+- `StoreContext` - React context object
 
-**Key exports:**
+**Key exports (from `packages/stores/src/index.ts`):**
 
 ```typescript
 export { observer } from 'mobx-react-lite';
+export { default as mockStore } from './mockStore';
+export { default as StoreContext } from './storeContext';
 export { default as StoreProvider } from './storeProvider';
 export { default as useStore } from './useStore';
-export { default as BaseStore } from './stores/BaseStore';
-export { default as FeatureFlagsStore } from './stores/FeatureFlagsStore';
 ```
+
+Note: `BaseStore` and `FeatureFlagsStore` exist in `packages/stores/src/stores/` but are not exported from the package index. `BaseStore` used by trader package lives at `packages/trader/src/Stores/base-store.ts`.
 
 ### **@deriv/api** - React Query Hooks
 
@@ -1063,7 +1066,7 @@ npm run test              # Jest + ESLint + Stylelint
 
 1. **Router** - URL state
 2. **StoreProvider** - Global MobX stores
-3. **BreakpointProvider** - Device detection (@deriv-com/ui)
+3. **BreakpointProvider** - Device detection (@deriv-com/quill-ui)
 4. **APIProvider** - WebSocket + QueryClient
 5. **TranslationProvider** - i18n with lazy loading
 
@@ -1202,11 +1205,11 @@ cd derivatives-trader
 npm run bootstrap
 
 # Start core app
-npm run serve --workspace=@deriv/core
+npm run serve core
 # Starts webpack dev server at https://localhost:8443
 
 # Start specific package
-npm run serve --workspace=@deriv/trader
+npm run serve trader
 
 # Watch tests
 npm run test:jest -- --watch

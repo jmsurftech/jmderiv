@@ -13,24 +13,25 @@ The derivatives trader application is a React-based front-end project implemente
 - **Context API + MobX**: State management combines React Context for providing store access and MobX for observable state. This provides a reactive programming model while maintaining good component isolation.
 - **Code Splitting**: The application implements dynamic imports and React.lazy for route-based code splitting. This improves initial load time by only loading necessary code.
 - **Feature-Based Organization**: Modules are organized by business functionality rather than technical layers, improving cohesion and reducing coupling.
-- **Progressive Enhancement**: The app implements both legacy (App) and next-gen (AppV2) versions, suggesting an incremental migration strategy.
+- **AppV2 as Primary UI**: The `packages/trader/src/index.tsx` entry point renders `AppV2` directly — AppV2 is the live product. The legacy `App` module still exists but is no longer the entry point.
 - **Responsive Design Architecture**: The application implements different layouts and behaviors for mobile, tablet, and desktop viewports, with device detection logic.
-- **Feature Flags**: The application uses feature flags to enable/disable features and control which version of components to use (App vs AppV2).
+- **Feature Flags**: The application uses feature flags to enable/disable specific features and contract types within AppV2.
 
 ### Package Organization
 
 The codebase is organized into multiple packages:
 
-- **api**: API client library for communicating with backend services
-- **api-v2**: Improved API client implementation (likely newer version)
+- **api**: API client library with React Query hooks for communicating with backend services via WebSocket
+- **api-v2**: Improved API client implementation with additional endpoint support
 - **components**: Reusable UI components library with a comprehensive set of common UI elements
 - **trader**: Main trading application implementing the core business functionality
-- **stores**: Central state management with observable stores
+- **stores**: Central state management with MobX observable stores and StoreProvider
 - **shared**: Common utilities, constants, and helpers shared across packages
 - **utils**: Utility functions for common operations
-- **reports**: Reporting and analysis functionality
-- **core**: Core business logic and domain models
-- **translations**: Internationalization package (currently appears to be empty or under development)
+- **reports**: Reporting and analysis functionality (trade history, positions, statements)
+- **core**: Application shell, routing, global stores, and initialization
+
+Note: Translations are handled by the external `@deriv-com/translations` package (not a monorepo package).
 
 ### Module Structure
 
@@ -39,7 +40,7 @@ The main trader package is organized into modules:
 - **Trading**: Core trading functionality including trade parameters, chart integration, and execution
 - **Contract**: Contract details and management for viewing and managing active positions
 - **SmartChart**: Chart visualization components for technical analysis
-- **App/AppV2**: Main application shells with different implementations
+- **AppV2**: Primary application shell (entry point via `src/index.tsx`). Contains the live trading UI with components, hooks, containers, and utilities organized under `src/AppV2/`
 - **Page404**: Error page handling for invalid routes
 
 ### Inter-Package Dependencies
@@ -73,8 +74,8 @@ The application uses a sophisticated state management approach:
 
 ### SmartChartModule
 
-- **Dependencies**: ChartStore, MarketStore
-- **Description**: Chart visualization and technical analysis tools. Provides interactive price charts with various timeframes, indicators, and drawing tools. Consumes market data and provides visual representation for decision making. Supports different chart types and layouts with customization options. Implements touch interactions for mobile devices and mouse interactions for desktop.
+- **Dependencies**: `@deriv-com/smartcharts-champion`, ChartAPI (WebSocket), ApiHelpers, TradeStore
+- **Description**: Chart visualization using `@deriv-com/smartcharts-champion`. Includes a custom adapter layer (`Adapters/`) that bridges Deriv's WebSocket API to the chart library's expected interface. The adapter provides `getQuotes` (historical data) and `subscribeQuotes` (real-time streaming) functions. A `useSmartChartsAdapter` hook encapsulates adapter lifecycle management including active symbols enrichment and tick data callbacks.
 
 ### ContractModule
 
@@ -155,9 +156,9 @@ graph TD
     TradeStore --> APIClient[API Client]
     APIClient --> WebSocket[WebSocket]
 
-    %% AppV2 Structure (Parallel Implementation)
-    AppV2[AppV2] -.-> TraderProviders
-    AppV2 -.-> ModulesProvider
+    %% AppV2 is the primary entry point (index.tsx renders AppV2 directly)
+    AppV2[AppV2 - Primary Entry] --> TraderProviders
+    AppV2 --> ModulesProvider
 
     %% Data Flow
     WebSocket -->|Market Data| TradeStore
@@ -175,7 +176,6 @@ graph TD
         trader --> api
         components --> shared
         components --> utils
-        components --> translations
         api --> shared
         api --> utils
         stores --> shared
@@ -187,36 +187,28 @@ graph TD
 
 ```mermaid
 graph LR
-    %% Main Routes
-    BaseRoute["/"] --> TraderRoute["/trader"]
-    TraderRoute --> ContractRoute["/contract/:contract_id"]
-
-    %% Module Assignment
-    TraderRoute --> Trade[Trading Module]
-    ContractRoute --> ContractDetails[Contract Module]
+    %% Main Routes (from @deriv/shared routes constants)
+    BaseRoute["/"] --> Trade[Trading Module]
+    PositionsRoute["/positions"] --> Positions[Positions Module]
+    ContractRoute["/contract/:contract_id"] --> ContractDetails[Contract Module]
+    ReportsRoute["/reports"] --> Reports[Reports Module]
+    ErrorRoute["/404"] --> ErrorComponent[Error Component]
 
     %% Route Configuration
-    Routes[Routes Config] --> TraderRoute
+    Routes[Routes Config] --> BaseRoute
     Routes --> ContractRoute
-    Routes --> ErrorRoute[Error Routes]
+    Routes --> PositionsRoute
+    Routes --> ReportsRoute
+    Routes --> ErrorRoute
 
-    %% Loading Patterns
-    TraderRoute --> TradeModuleLazy[Lazy Loading]
-    ContractRoute --> ContractModuleLazy[Lazy Loading]
+    %% Loading Patterns (lazy loaded chunks)
+    ContractRoute --> ContractModuleLazy[Lazy - webpackChunkName: contract]
+    ErrorRoute --> ErrorModuleLazy[Lazy - webpackChunkName: 404]
 
     %% Routing Middleware
     History[Browser History] --> RoutingMiddleware[Routing Middleware]
     RoutingMiddleware --> TradePageMounting[Trade Page Mounting Policy]
-    RoutingMiddleware --> PortfolioClear[Portfolio Clear]
-
-    %% Feature Flag Routes
-    FeatureFlags[Feature Flags] --> AppSelection{App Selection}
-    AppSelection -->|v2 Enabled| AppV2Routes[AppV2 Routes]
-    AppSelection -->|v2 Disabled| AppRoutes[App Routes]
-
-    %% Error Handling
-    ErrorRoute --> ErrorComponent[Error Component]
-    BinaryRoutes -->|Error State| ErrorComponent
+    RoutingMiddleware --> PortfolioClear[Portfolio Clear on Navigate]
 
     %% Route Guards
     RouteGuards[Route Guards] -->|Authenticated| ProtectedRoutes[Protected Routes]
@@ -266,10 +258,11 @@ The application uses a sophisticated build system to support the monorepo struct
 
 - **npm workspaces**: Manages the monorepo packages and their interdependencies
 - **Node.js 20.x**: Required engine version specified in package.json
-- **Webpack**: Handles code bundling, splitting, and optimization (configuration varies per package)
+- **React 18**: UI library (overridden to 18.2.0 via package.json overrides)
+- **Webpack 5**: Handles code bundling, splitting, and optimization (configuration varies per package)
 - **Babel**: Transpiles modern JavaScript features with comprehensive plugin support including decorators, class properties, and optional chaining
-- **TypeScript**: Provides static typing and compile-time checks across all packages
-- **Jest**: Testing framework with jsdom environment and shared base configuration
+- **TypeScript 5**: Provides static typing and compile-time checks across all packages
+- **Jest 29**: Testing framework with jsdom environment and shared base configuration
 - **PostCSS**: Processes CSS with plugins like autoprefixer
 - **ESLint**: Static code analysis using @deriv-com/eslint-config-deriv for consistent code quality
 - **Prettier**: Code formatting enforcement
@@ -377,7 +370,7 @@ Areas for potential security improvements include:
 
 ## Code Smells
 
-- Multiple version branches (App vs AppV2) suggesting complex migration in progress. This creates duplication and increases the maintenance burden. Consider a more strategic approach to migration with shared components.
+- The legacy `App` module (`src/App/`) still exists alongside `AppV2` but is no longer the entry point. Some legacy components and utilities in `App/` are still shared or imported by AppV2, creating cross-module coupling that complicates future cleanup.
 - Inline timeouts and setTimeout usage directly in components rather than in dedicated services. For example, in the Trade component there are multiple setTimeout calls for managing UI state. This makes timing-related behavior difficult to test and maintain.
 - Disabled ESLint rules in multiple places (particularly eslint-disable-next-line react-hooks/exhaustive-deps) indicating potential issues with dependency arrays in useEffect hooks. This suggests possible stale closure bugs or unnecessary re-renders.
 - Complex conditional rendering with multiple nested conditions in the Trade component making the code difficult to follow and maintain. Consider breaking down complex conditionals into smaller, more focused components or helper functions.
@@ -397,7 +390,7 @@ Areas for potential security improvements include:
 - Consider extracting chart-related components into a standalone package to improve modularity and reusability. Currently, SmartChart is tightly coupled with the trading module, making it difficult to use independently in other contexts.
 - Implement stronger typing for store interfaces to reduce reliance on any types and improve type safety. Many global types use 'any' which undermines TypeScript's benefits and could lead to runtime errors that static typing should prevent.
 - Standardize the pattern for React hooks across packages - some use React.useState while others use the hook directly. This inconsistency makes the codebase less predictable and harder to maintain. Establish coding standards for hook usage.
-- Consolidate the dual implementation approach (App vs AppV2). The parallel implementations increase maintenance burden and could introduce inconsistencies. Consider a more incremental migration strategy with feature flags to toggle specific components rather than entire application versions.
+- Clean up legacy `App` module code that is no longer used as an entry point but still exists in `src/App/`. Audit which parts are genuinely shared with AppV2 and which can be removed to reduce dead code.
 - Implement more extensive memoization to prevent unnecessary re-renders, particularly in the Trade component which has many dependencies that could trigger re-renders. Use React.memo with custom comparison functions where appropriate.
 - Refactor the complex conditions in the Trade component to improve readability and maintainability. Extract complex conditional logic into separate functions or custom hooks. Consider using the strategy pattern for different trading modes.
 - Standardize error handling patterns across the application. Implement a consistent approach to API errors, validation errors, and UI feedback. Create reusable error handling utilities and components that can be shared across the application.
@@ -415,4 +408,4 @@ This architectural analysis provides a comprehensive overview of the Derivatives
 
 The monorepo structure with clear package boundaries provides good separation of concerns, while the use of modern React patterns and MobX for state management creates a solid foundation for the application. The combination of component-based architecture and feature-based organization results in a maintainable codebase.
 
-Key areas for improvement include consolidating the dual implementation approach (App vs AppV2), strengthening type safety, standardizing patterns for hooks and error handling, and improving component organization to reduce complexity in large components.
+Key areas for improvement include cleaning up legacy `App` module code (AppV2 is now the primary UI), strengthening type safety, standardizing patterns for hooks and error handling, and improving component organization to reduce complexity in large components.
