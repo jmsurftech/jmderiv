@@ -76,6 +76,7 @@
         "analyze:bundle:all": "npm run analyze:bundle --workspace=@deriv/core && npm run analyze:bundle --workspace=@deriv/trader && npm run analyze:bundle --workspace=@deriv/reports && npm run analyze:bundle --workspace=@deriv/components",
         "analyze:bundle:summary": "node scripts/bundle-summary.js || echo 'Bundle analysis complete! Check individual package directories for bundle-report.html files'",
         "generate:colors": "node ./scripts/generate-colors.js",
+        "verify:whitelabel": "node ./scripts/verify-white-label.js",
         "check-imports": "node ./scripts/check-imports.js",
         "test": "npm run test:stylelint && npm run test:eslint-all && npm run test:jest",
         "test:eslint-all": "npm run --workspaces --if-present test:eslint",

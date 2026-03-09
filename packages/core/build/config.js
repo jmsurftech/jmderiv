@@ -2,6 +2,9 @@ const path = require('path');
 const stylelintFormatter = require('stylelint-formatter-pretty');
 const { transformContentUrlBase } = require('./helpers');
 const { GitRevisionPlugin } = require('git-revision-webpack-plugin');
+// [AI]
+const brandConfig = require('../../../brand.config.json');
+// [/AI]
 
 const gitRevisionPlugin = new GitRevisionPlugin();
 
@@ -92,9 +95,22 @@ const copyConfig = base => {
             to: 'manifest.json',
             toType: 'file',
             transform(content, transform_path) {
-                return transformContentUrlBase(content, transform_path, base);
+                // [AI]
+                const transformed = transformContentUrlBase(content, transform_path, base);
+                return transformed
+                    .toString()
+                    .replace(/"name": "Deriv"/, `"name": "${brandConfig.brand_name}"`)
+                    .replace(/"short_name": "Deriv"/, `"short_name": "${brandConfig.brand_name}"`);
+                // [/AI]
             },
         },
+        // [AI]
+        {
+            from: path.resolve(__dirname, '../../../assets/brand'),
+            to: 'brand',
+            noErrorOnMissing: false,
+        },
+        // [/AI]
     ];
 
     return {
@@ -212,6 +228,17 @@ const generateSWConfig = () => ({
 const htmlOutputConfig = is_release => ({
     template: 'index.html',
     filename: 'index.html',
+    // [AI]
+    templateParameters: {
+        brand_name: brandConfig.brand_name,
+        platform_name: brandConfig.platform.name,
+        platform_description: brandConfig.platform.description || '',
+        canonical_url: `https://${brandConfig.platform.hostname.production}`,
+        api_core_url: `https://${brandConfig.api_core.production}`,
+        api_url: `https://${brandConfig.api.production}`,
+        auth_url: brandConfig.auth.production,
+    },
+    // [/AI]
     meta: is_release
         ? {
               versionMetaTAG: {
