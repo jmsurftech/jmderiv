@@ -9,6 +9,7 @@ import { StoreProvider } from '@deriv/stores';
 import { BreakpointProvider } from '@deriv-com/quill-ui';
 import { getInitialLanguage, initializeI18n, TranslationProvider } from '@deriv-com/translations';
 
+import { clearTokens, exchangeCodeForToken } from 'Services/oauth';
 import WS from 'Services/ws-methods';
 
 import { FORM_ERROR_MESSAGES } from '../Constants/form-error-messages';
@@ -19,7 +20,7 @@ import 'Sass/app.scss';
 
 const App = ({ root_store }) => {
     const i18nInstance = initializeI18n({
-        cdnUrl: `${process.env.CROWDIN_URL}/${process.env.R2_PROJECT_NAME}/${process.env.CROWDIN_BRANCH_NAME}`,
+        cdnUrl: process.env.TRANSLATIONS_CDN_URL || '',
     });
     const l = window.location;
     const base = l.pathname.split('/')[1];
@@ -29,6 +30,44 @@ const App = ({ root_store }) => {
     const is_dark_mode = is_dark_mode_on || JSON.parse(localStorage.getItem('ui_store'))?.is_dark_mode_on;
     const language = preferred_language ?? getInitialLanguage();
     const { isBridgeAvailable, sendBridgeEvent } = useMobileBridge();
+
+    // Handle OAuth2 callback — the auth server redirects back to / with ?code=...&state=...
+    // No separate /callback route needed; we handle it inline here on every mount.
+    React.useEffect(() => {
+        const params = new URLSearchParams(window.location.search);
+        const code = params.get('code');
+        const state = params.get('state');
+
+        const cleanURL = () => {
+            const url = new URL(window.location.href);
+            url.searchParams.delete('code');
+            url.searchParams.delete('state');
+            window.history.replaceState({}, '', url.toString());
+        };
+
+        if (!code) return; // Normal load — not an OAuth callback
+
+        // Validate CSRF token
+        const stored_csrf = sessionStorage.getItem('oauth_csrf_token');
+        if (!state || state !== stored_csrf) {
+            // eslint-disable-next-line no-console
+            console.error('[OAuth] CSRF token mismatch — aborting token exchange');
+            clearTokens();
+            cleanURL();
+            return;
+        }
+
+        sessionStorage.removeItem('oauth_csrf_token');
+
+        exchangeCodeForToken(code)
+            .then(() => cleanURL())
+            .catch(err => {
+                // eslint-disable-next-line no-console
+                console.error('[OAuth] Token exchange failed:', err);
+                cleanURL();
+            });
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, []);
 
     // Send trading:ready event to ensure smooth loader transition
     React.useEffect(() => {

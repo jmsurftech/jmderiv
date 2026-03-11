@@ -96,11 +96,15 @@ const copyConfig = base => {
             toType: 'file',
             transform(content, transform_path) {
                 // [AI]
-                const transformed = transformContentUrlBase(content, transform_path, base);
-                return transformed
-                    .toString()
-                    .replace(/"name": "Deriv"/, `"name": "${brandConfig.brand_name}"`)
-                    .replace(/"short_name": "Deriv"/, `"short_name": "${brandConfig.brand_name}"`);
+                const manifest = JSON.parse(transformContentUrlBase(content, transform_path, base).toString());
+                manifest.name = brandConfig.brand_name;
+                manifest.short_name = brandConfig.brand_name;
+                manifest.description = brandConfig.platform.description || '';
+                if (brandConfig.colors?.primary) {
+                    manifest.theme_color = brandConfig.colors.primary;
+                    manifest.background_color = brandConfig.colors.primary;
+                }
+                return JSON.stringify(manifest, null, 4);
                 // [/AI]
             },
         },
@@ -233,7 +237,8 @@ const htmlOutputConfig = is_release => ({
         brand_name: brandConfig.brand_name,
         platform_name: brandConfig.platform.name,
         platform_description: brandConfig.platform.description || '',
-        canonical_url: `https://${brandConfig.platform.hostname.production}`,
+        canonical_url: `https://${brandConfig.brand_hostname.production}`,
+        theme_color: brandConfig.colors?.primary || '#000000',
         api_core_url: `https://${brandConfig.api_core.production}`,
         api_url: `https://${brandConfig.api.production}`,
         auth_url: brandConfig.auth.production,

@@ -1,61 +1,27 @@
-import { getLogoutURL, removeCookies } from '@deriv/shared';
-import { Chat } from '@deriv/utils';
+import { removeCookies } from '@deriv/shared';
 
 import WS from './ws-methods';
 
+import { clearTokens } from './oauth';
 import SocketCache from '_common/base/socket_cache';
 
 /**
- * Request logout via REST API endpoint
- * @returns Promise with logout response
+ * Log out via WebSocket { logout: 1 } message (v4), then clear all local state.
+ * The function name is kept as requestRestLogout for backward compatibility with
+ * client-store.js which calls it directly.
  */
 export const requestRestLogout = async () => {
     try {
-        const logoutUrl = getLogoutURL();
-
-        // Step 1: Get logout URL and token
-        const response = await fetch(logoutUrl, {
-            method: 'GET',
-            credentials: 'include',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-        });
-
-        // Check if response is JSON
-        const contentType = response.headers.get('content-type');
-        if (contentType && contentType.includes('application/json')) {
-            const data = await response.json();
-
-            // Step 2: Call the logout_url to complete logout
-            if (data.logout_url) {
-                await fetch(data.logout_url, {
-                    method: 'GET',
-                    credentials: 'include',
-                });
-            }
-        }
-
-        // Return success response - cleanup is handled by client-store.js
-        return { logout: 1 };
-    } catch (error) {
-        // Return success response even if REST call fails - cleanup is handled by client-store.js
-        return { logout: 1 };
+        // v4: server invalidates the session on receiving { logout: 1 }
+        await WS.logout();
+    } catch (e) {
+        // Continue cleanup even if the WS call fails (e.g. already disconnected)
     }
-};
 
-/**
- * Request logout via WebSocket (legacy method for backward compatibility)
- * @returns Promise with logout response
- */
-export const requestLogout = () => WS.logout().then(doLogout);
+    // Clear OAuth tokens
+    clearTokens();
 
-function endChat() {
-    Chat.clear();
-}
-
-const doLogout = response => {
-    if (response.logout !== 1) return undefined;
+    // Clear all other auth-related storage
     removeCookies('affiliate_token', 'affiliate_tracking', 'onfido_token', 'gclid', 'utm_data');
     localStorage.removeItem('closed_toast_notifications');
     localStorage.removeItem('config.account1');
@@ -63,12 +29,17 @@ const doLogout = response => {
     localStorage.removeItem('verification_code.system_email_change');
     localStorage.removeItem('verification_code.request_email');
     localStorage.removeItem('new_email.system_email_change');
-    localStorage.removeItem('account_id');
-    localStorage.removeItem('account_type');
+    localStorage.removeItem('active_loginid');
+    localStorage.removeItem('active_user_id');
+    localStorage.removeItem('current_account');
+
+    // Write cross-tab logout sentinel — initStore.js storage listener picks this up
+    localStorage.setItem('logout_event', String(Date.now()));
+
     SocketCache.clear();
     Object.keys(sessionStorage)
         .filter(key => key !== 'trade_store')
         .forEach(key => sessionStorage.removeItem(key));
-    endChat();
-    return response;
+
+    return { logout: 1 };
 };

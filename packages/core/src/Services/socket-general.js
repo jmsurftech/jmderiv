@@ -1,6 +1,7 @@
 import { getPropertyValue, getSocketURL, mapErrorMessage } from '@deriv/shared';
 import { localize } from '@deriv-com/translations';
 
+import { clearTokens, generateOAuthURL } from './oauth';
 import WS from './ws-methods';
 
 import ServerTime from '_common/base/server_time';
@@ -21,8 +22,6 @@ const BinarySocketGeneral = (() => {
 
     const onConnectionError = () => {
         localStorage.removeItem('active_loginid');
-        localStorage.removeItem('account_id');
-        localStorage.removeItem('account_type');
 
         common_store.setError(true, {
             message: localize('Connection failed. Please refresh this page to continue.'),
@@ -107,8 +106,10 @@ const BinarySocketGeneral = (() => {
                 break;
             }
             case 'InvalidToken': {
-                client_store.logout();
-                window.location.reload();
+                // Do NOT reload — that causes an infinite loop when the token is gone.
+                // Instead clear tokens and redirect to a fresh OAuth login.
+                clearTokens();
+                generateOAuthURL().then(url => window.location.replace(url));
                 break;
             }
             default:

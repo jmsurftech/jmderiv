@@ -3,9 +3,7 @@ import { action, computed, makeObservable, observable, reaction, runInAction, wh
 import moment from 'moment';
 
 import {
-    clearAccountId,
     filterUrlQuery,
-    getAccountId,
     getAccountType,
     getTrustedDomainName,
     isCryptocurrency,
@@ -17,7 +15,8 @@ import {
 } from '@deriv/shared';
 import { getInitialLanguage, localize } from '@deriv-com/translations';
 
-import { checkWhoAmI, requestRestLogout, WS } from 'Services';
+import { requestRestLogout, WS } from 'Services';
+import { clearTokens, generateOAuthURL, getStoredToken } from '../Services/oauth';
 
 import { getClientAccountType } from './Helpers/client';
 import { buildCurrenciesList } from './Modules/Trading/Helpers/currency';
@@ -164,10 +163,10 @@ export default class ClientStore extends BaseStore {
     }
 
     get is_logged_in() {
-        const hasAccountId = !!getAccountId();
+        const hasToken = !!getStoredToken();
         const hasCurrentAccountLoginId = !!this.current_account?.loginid;
         const hasLoginId = !!this.loginid;
-        return hasAccountId && hasCurrentAccountLoginId && hasLoginId;
+        return hasToken && hasCurrentAccountLoginId && hasLoginId;
     }
 
     get is_virtual() {
@@ -323,22 +322,18 @@ export default class ClientStore extends BaseStore {
         const action_param = search_params?.get('action');
         const loginid_param = search_params?.get('loginid');
 
-        const account_id = getAccountId();
-
-        if (account_id) {
+        if (getStoredToken()) {
             // Set is_logging_in to true while we wait for authorization
             this.setIsLoggingIn(true);
 
-            // Wait for balance response which serves as authorization
-            // socket-general.js will handle the balance response and call authorizeAccount()
+            // Wait for balance response which serves as authorization.
+            // socket-general.js processes the balance response and calls authorizeAccount().
             try {
                 await BinarySocket.wait('balance');
             } catch (error) {
                 // eslint-disable-next-line no-console
                 console.error('[Auth] Balance timeout:', error);
-                // Clear invalid credentials and retry as public
-                clearAccountId();
-                localStorage.removeItem('account_type');
+                clearTokens();
             }
         }
 
@@ -429,55 +424,29 @@ export default class ClientStore extends BaseStore {
     }
 
     /**
-     * Checks session validity via whoami service and handles cleanup if needed
-     */
-    async handleWhoAmI() {
-        const result = await checkWhoAmI();
-
-        // Only trigger cleanup if we get 401 error AND have account_id (expect to be logged in)
-        // This means user logged out from Deriv home. If no account_id, we're on public - ignore 401
-        if (result.error?.code === 401 && getAccountId()) {
-            await this.cleanUp();
-        }
-    }
-
-    /**
-     * Sets up visibility change and focus listeners to check whoami when tab becomes visible or gains focus
+     * Sets up a visibility change listener: if the token has expired while the
+     * tab was hidden, log the user out and redirect to OAuth login.
      */
     setupVisibilityListener() {
-        // Remove existing listeners if any
         this.removeVisibilityListener();
 
-        // Create visibility change handler
         this.tab_visibility_handler = () => {
-            if (document.visibilityState === 'visible') {
-                // Tab became visible - check whoami
-                this.handleWhoAmI();
+            if (document.visibilityState === 'visible' && !getStoredToken() && this.is_logged_in) {
+                // Token expired while tab was hidden — redirect to fresh OAuth login
+                generateOAuthURL().then(url => window.location.replace(url));
             }
         };
 
-        // Create focus handler
-        this.window_focus_handler = () => {
-            // Window gained focus - check whoami
-            this.handleWhoAmI();
-        };
-
-        // Add listeners
         document.addEventListener('visibilitychange', this.tab_visibility_handler);
-        window.addEventListener('focus', this.window_focus_handler);
     }
 
     /**
-     * Removes the visibility change and focus listeners
+     * Removes the visibility change listener
      */
     removeVisibilityListener() {
         if (this.tab_visibility_handler) {
             document.removeEventListener('visibilitychange', this.tab_visibility_handler);
             this.tab_visibility_handler = null;
-        }
-        if (this.window_focus_handler) {
-            window.removeEventListener('focus', this.window_focus_handler);
-            this.window_focus_handler = null;
         }
     }
 
@@ -548,9 +517,9 @@ export default class ClientStore extends BaseStore {
         localStorage.setItem('active_user_id', this.user_id);
         localStorage.setItem(storage_key, JSON.stringify(this.current_account));
 
-        // Clear account_id and account_type from localStorage
-        clearAccountId();
-        localStorage.removeItem('account_type');
+        // Clear OAuth tokens and reset WS to public endpoint
+        clearTokens();
+        BinarySocket.setWSUrl(null);
 
         runInAction(() => {
             // Since payout_currencies endpoint has been removed, use USD as default
@@ -596,12 +565,10 @@ export default class ClientStore extends BaseStore {
      * @param {string} account_id - The account ID to switch to
      * @param {'real' | 'demo'} account_type - The account type
      */
-    async switchAccount(account_id, account_type) {
+    async switchAccount(account_id) {
         if (!account_id || this.loginid === account_id) return;
 
-        // Update localStorage with new account
-        localStorage.setItem('account_id', account_id);
-        localStorage.setItem('account_type', account_type);
+        // Track the newly active account for multi-tab sync
         localStorage.setItem('active_loginid', account_id);
         sessionStorage.setItem('active_loginid', account_id);
 

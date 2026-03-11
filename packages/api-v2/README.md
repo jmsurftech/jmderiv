@@ -112,7 +112,6 @@ The package provides several domain-specific hooks for common API operations:
 
 - **Authentication**: `useAuthorize` - Handle user authentication and authorization
 - **Financial Operations**: `useBalance` - Fetch and manage account balance data
-- **Configuration**: `useRemoteConfig` - Access remote configuration settings
 - **System Information**: `useServerTime` - Get server time information
 
 ## Usage Examples

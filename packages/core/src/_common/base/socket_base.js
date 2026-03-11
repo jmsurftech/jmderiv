@@ -1,5 +1,5 @@
 const DerivAPIBasic = require('@deriv/deriv-api/dist/DerivAPIBasic');
-const { getCompleteWebSocketURL, getAccountId, getAccountType, cloneObject, State } = require('@deriv/shared');
+const { getAccountType, cloneObject, State } = require('@deriv/shared');
 const SocketCache = require('./socket_cache');
 const APIMiddleware = require('./api_middleware');
 
@@ -18,6 +18,17 @@ const BinarySocketBase = (() => {
     let reconnect_handlers = []; // Array to store multiple reconnection handlers
     let reconnect_attempt_count = 0; // Track number of reconnect attempts
 
+    // v4: WS URL is set by client-store after fetching an OTP from the REST API.
+    // null means unauthenticated — fall back to public endpoint.
+    const V4_PUBLIC_WS = 'wss://api.derivws.com/trading/v1/options/ws/public';
+    let configured_ws_url = null;
+
+    const setWSUrl = url => {
+        configured_ws_url = url;
+    };
+
+    const getWSUrl = () => configured_ws_url;
+
     const availability = {
         is_up: true,
         is_updating: false,
@@ -28,8 +39,7 @@ const BinarySocketBase = (() => {
         if (is_mock_server) {
             return 'ws://127.0.0.1:42069';
         }
-
-        return getCompleteWebSocketURL();
+        return configured_ws_url ?? V4_PUBLIC_WS;
     };
 
     const isReady = () => hasReadyState(1);
@@ -114,11 +124,11 @@ const BinarySocketBase = (() => {
             // Reset reconnect attempt counter on successful connection
             reconnect_attempt_count = 0;
 
-            // Remove automatic authorization - server handles it via account_id
-            // Balance subscription will serve as auth confirmation
-            const account_id = getAccountId();
+            // v4: auth is embedded in the OTP WS URL — no separate authorize message.
+            // Balance subscription serves as auth confirmation (handled in socket-general.js).
+            const is_authenticated = configured_ws_url && configured_ws_url !== V4_PUBLIC_WS;
 
-            if (account_id) {
+            if (is_authenticated) {
                 // Only reset authorization state on initial connection, not on reconnection
                 // On reconnection, user is still logged in and is_authorize should remain true
                 // This allows stores' reaction() to work correctly on reconnection
@@ -501,6 +511,8 @@ const BinarySocketBase = (() => {
         triggerMt5DryRun,
         getServiceToken,
         changeEmail,
+        setWSUrl,
+        getWSUrl,
     };
 })();
 
@@ -536,13 +548,14 @@ const proxyForAuthorize = obj =>
                 return proxyForAuthorize(target[field]);
             }
             return (...args) => {
-                // Wait for balance response instead of authorize (balance serves as auth confirmation)
-                const account_id = getAccountId();
-                if (account_id) {
-                    // Wait for balance (which confirms authorization)
+                // Wait for balance response instead of authorize (balance serves as auth confirmation).
+                // In v4 the OTP URL embeds auth — balance confirms the session is live.
+                // Access configured_ws_url via the IIFE-exposed getter rather than direct closure reference.
+                const current_ws_url = BinarySocketBase.getWSUrl?.();
+                if (current_ws_url && current_ws_url !== 'wss://api.derivws.com/trading/v1/options/ws/public') {
                     return BinarySocketBase?.wait('balance')?.then(() => target[field](...args));
                 }
-                // Not logged in, execute without waiting
+                // Not authenticated — execute without waiting
                 return target[field](...args);
             };
         },

@@ -6,7 +6,7 @@ import { useDerivativesAccount, useMobileBridge } from '@deriv/api';
 import { Button, Skeleton, Text } from '@deriv/components';
 import AccountSwitcher from '@deriv/core/src/App/Components/Layout/Header/account-switcher';
 import { LegacyChevronDown1pxIcon } from '@deriv/quill-icons';
-import { addComma, getBrandUrl, getCurrencyDisplayCode, redirectToLogin } from '@deriv/shared';
+import { addComma, getBrandUrl, getCurrencyDisplayCode, getSignupUrl, redirectToLogin } from '@deriv/shared';
 import { useStore } from '@deriv/stores';
 import { Localize, useTranslations } from '@deriv-com/translations';
 import { useDevice } from '@deriv-com/ui';
@@ -82,7 +82,6 @@ const AccountHeader = observer(
             balance !== undefined &&
             balance !== null &&
             balance !== '' &&
-            // (typeof balance === 'number' || !isNaN(Number(String(balance).replace(/,/g, ''))));
             !isNaN(Number(String(balance).replace(/,/g, '')));
 
         const accountTypeHeader = is_virtual ? localize('Demo account') : localize('Real account');
@@ -94,7 +93,6 @@ const AccountHeader = observer(
         // - If only demo accounts exist -> show "Try real"
         // - Otherwise (real only or both real and demo) -> show "Transfer"
         const buttonLabel = hasOnlyDemoAccounts ? localize('Try real') : localize('Deposit');
-        const buttonType = hasOnlyDemoAccounts ? 'try_real' : 'deposit';
 
         const handleTransferClick = () => {
             if (hasOnlyDemoAccounts) {
@@ -179,19 +177,35 @@ const AccountHeader = observer(
             const handleLoginClick = () => {
                 redirectToLogin(common.current_language);
             };
+            const signup_url = getSignupUrl();
 
             return (
                 <div className='account-header'>
-                    <Button
-                        className='account-header__login'
-                        onClick={handleLoginClick}
-                        aria-label={localize('Log in')}
-                        type='button'
-                    >
-                        <Text size='xs' weight='bold' color='white'>
-                            <Localize i18n_default_text='Log in' />
-                        </Text>
-                    </Button>
+                    <div className='account-header__logged-out'>
+                        {signup_url && (
+                            <Button
+                                className='account-header__signup'
+                                onClick={() => window.open(signup_url, '_blank', 'noopener,noreferrer')}
+                                aria-label={localize('Sign up')}
+                                type='button'
+                                secondary
+                            >
+                                <Text size='xs' weight='bold'>
+                                    <Localize i18n_default_text='Sign up' />
+                                </Text>
+                            </Button>
+                        )}
+                        <Button
+                            className='account-header__login'
+                            onClick={handleLoginClick}
+                            aria-label={localize('Log in')}
+                            type='button'
+                        >
+                            <Text size='xs' weight='bold' color='white'>
+                                <Localize i18n_default_text='Log in' />
+                            </Text>
+                        </Button>
+                    </div>
                 </div>
             );
         }

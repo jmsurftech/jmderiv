@@ -15,8 +15,9 @@ import {
     StandaloneMoonRegularIcon,
     StandaloneRightFromBracketRegularIcon,
     StandaloneSunBrightRegularIcon,
+    StandaloneUserPlusRegularIcon,
 } from '@deriv/quill-icons';
-import { getHelpCentreUrl, routes } from '@deriv/shared';
+import { getHelpCentreUrl, getSignupUrl, isFeatureEnabled, routes } from '@deriv/shared';
 import { observer, useStore } from '@deriv/stores';
 import { useTranslations } from '@deriv-com/translations';
 import { useDevice } from '@deriv-com/ui';
@@ -96,49 +97,58 @@ const MenuPage = observer(() => {
                     {/* [/AI] */}
 
                     {/* Settings Section */}
-                    <div className='header__menu-section'>
-                        <div className='header__menu-section-header'>
-                            <Text className='header__menu-section-title' size='xsm' weight='bold'>
-                                {localize('Settings')}
-                            </Text>
-                        </div>
-                        <div className='menu-page__item' onClick={() => setShowLanguageSelector(true)}>
-                            <MenuLink
-                                icon={<StandaloneGlobeRegularIcon iconSize='sm' />}
-                                text={localize('Language')}
-                                suffix_icon={<StandaloneChevronRightRegularIcon iconSize='sm' />}
-                            />
-                        </div>
-                        <div className='menu-page__item' onClick={() => toggleTheme(!is_dark_mode)}>
-                            <div className={classNames('header__menu-mobile-link')}>
-                                {is_dark_mode ? (
-                                    <StandaloneSunBrightRegularIcon
-                                        className='header__menu-mobile-link-icon'
-                                        iconSize='sm'
-                                        fill='var(--color-text-primary)'
+                    {(isFeatureEnabled('language_switcher') || isFeatureEnabled('dark_mode')) && (
+                        <div className='header__menu-section'>
+                            <div className='header__menu-section-header'>
+                                <Text className='header__menu-section-title' size='xsm' weight='bold'>
+                                    {localize('Settings')}
+                                </Text>
+                            </div>
+                            {isFeatureEnabled('language_switcher') && (
+                                <div className='menu-page__item' onClick={() => setShowLanguageSelector(true)}>
+                                    <MenuLink
+                                        icon={<StandaloneGlobeRegularIcon iconSize='sm' />}
+                                        text={localize('Language')}
+                                        suffix_icon={<StandaloneChevronRightRegularIcon iconSize='sm' />}
                                     />
-                                ) : (
-                                    <StandaloneMoonRegularIcon
-                                        className='header__menu-mobile-link-icon'
-                                        iconSize='sm'
-                                        fill='var(--color-text-primary)'
-                                    />
-                                )}
-                                <div className='header__menu-mobile-link-text' onClick={e => e.preventDefault()}>
-                                    <Text size='s'>
-                                        {is_dark_mode ? localize('Light theme') : localize('Dark theme')}
-                                    </Text>
-                                    <div>
-                                        <ToggleSwitch
-                                            id='dt_menu_page_theme_toggler'
-                                            handleToggle={() => toggleTheme(!is_dark_mode)}
-                                            is_enabled={is_dark_mode}
-                                        />
+                                </div>
+                            )}
+                            {isFeatureEnabled('dark_mode') && (
+                                <div className='menu-page__item' onClick={() => toggleTheme(!is_dark_mode)}>
+                                    <div className={classNames('header__menu-mobile-link')}>
+                                        {is_dark_mode ? (
+                                            <StandaloneSunBrightRegularIcon
+                                                className='header__menu-mobile-link-icon'
+                                                iconSize='sm'
+                                                fill='var(--color-text-primary)'
+                                            />
+                                        ) : (
+                                            <StandaloneMoonRegularIcon
+                                                className='header__menu-mobile-link-icon'
+                                                iconSize='sm'
+                                                fill='var(--color-text-primary)'
+                                            />
+                                        )}
+                                        <div
+                                            className='header__menu-mobile-link-text'
+                                            onClick={e => e.preventDefault()}
+                                        >
+                                            <Text size='s'>
+                                                {is_dark_mode ? localize('Light theme') : localize('Dark theme')}
+                                            </Text>
+                                            <div>
+                                                <ToggleSwitch
+                                                    id='dt_menu_page_theme_toggler'
+                                                    handleToggle={() => toggleTheme(!is_dark_mode)}
+                                                    is_enabled={is_dark_mode}
+                                                />
+                                            </div>
+                                        </div>
                                     </div>
                                 </div>
-                            </div>
+                            )}
                         </div>
-                    </div>
+                    )}
 
                     {/* Support Section */}
                     <div className='header__menu-section'>
@@ -159,6 +169,20 @@ const MenuPage = observer(() => {
                             </>
                         )}
                     </div>
+
+                    {/* Sign up — only shown to logged-out users when signup_url is configured */}
+                    {!is_logged_in && !isBridgeAvailable && getSignupUrl() && (
+                        <div
+                            className='menu-page__item'
+                            onClick={() => window.open(getSignupUrl(), '_blank', 'noopener,noreferrer')}
+                        >
+                            <MenuLink
+                                icon={<StandaloneUserPlusRegularIcon iconSize='sm' />}
+                                text={localize('Sign up')}
+                                suffix_icon={<StandaloneChevronRightRegularIcon iconSize='sm' />}
+                            />
+                        </div>
+                    )}
 
                     {/* Log out */}
                     {is_logged_in && !isBridgeAvailable && (

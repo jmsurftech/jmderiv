@@ -1,13 +1,14 @@
-import { TLiveChatWidget } from './livechat';
-
 declare global {
+    namespace NodeJS {
+        interface ProcessEnv {
+            OAUTH_CLIENT_ID?: string;
+            REF_NAME?: string;
+            TRANSLATIONS_CDN_URL?: string;
+            NODE_ENV?: string;
+        }
+    }
     interface Window {
         DerivAppChannel?: DerivAppChannel;
-        DerivInterCom: {
-            initialize: (config: IntercomConfig) => void;
-        };
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        Intercom: any;
         navigator: Navigator;
     }
     interface TradingConfigData {
@@ -26,10 +27,6 @@ declare global {
     }
     interface DerivAppChannel {
         postMessage: (message: string) => void;
-    }
-    interface IntercomConfig {
-        token: string | null;
-        hideLauncher?: boolean;
     }
     interface Navigator {
         connection?: NetworkInformation;

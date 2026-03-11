@@ -10,6 +10,7 @@ import { AccountActions } from '../account-actions';
 jest.mock('@deriv/shared', () => ({
     ...jest.requireActual('@deriv/shared'),
     getBrandUrl: jest.fn(() => 'https://deriv.com'),
+    getSignupUrl: jest.fn(() => ''),
 }));
 
 const mockUseDerivativesAccount = jest.fn(() => ({

@@ -251,28 +251,6 @@ describe('Reports', () => {
                 expect(window.location.href).toBe('https://dtrader.deriv.com');
             });
 
-            test('redirects to deriv.be domain', async () => {
-                const history = createMemoryHistory({
-                    initialEntries: ['/?redirect=dtrader.deriv.be'],
-                });
-
-                renderReports(store, history);
-                await userEvent.click(screen.getByTestId(onCloseClick));
-
-                expect(window.location.href).toBe('https://dtrader.deriv.be');
-            });
-
-            test('redirects to deriv.me domain', async () => {
-                const history = createMemoryHistory({
-                    initialEntries: ['/?redirect=dtrader.deriv.me'],
-                });
-
-                renderReports(store, history);
-                await userEvent.click(screen.getByTestId(onCloseClick));
-
-                expect(window.location.href).toBe('https://dtrader.deriv.me');
-            });
-
             test('redirects to subdomain of allowed domain', async () => {
                 const history = createMemoryHistory({
                     initialEntries: ['/?redirect=staging-dtrader.deriv.com'],

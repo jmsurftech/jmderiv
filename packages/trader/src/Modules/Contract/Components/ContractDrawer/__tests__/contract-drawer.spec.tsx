@@ -61,11 +61,10 @@ jest.mock('react-transition-group', () => ({
     ...jest.requireActual('@deriv/shared'),
     CSSTransition: jest.fn(({ children }) => <div>{children}</div>),
 }));
-jest.mock('App/Components/Elements/ContentLoader', () => ({
-    ...jest.requireActual('App/Components/Elements/ContentLoader'),
+jest.mock('../../ContentLoader', () => ({
     PositionsCardLoader: jest.fn(() => <div>Position Card Loader</div>),
 }));
-jest.mock('App/Components/Elements/ContractAudit', () => jest.fn(() => <div>{contract_audit}</div>));
+jest.mock('../../ContractAudit', () => jest.fn(() => <div>{contract_audit}</div>));
 jest.mock('../contract-drawer-card', () =>
     jest.fn(props => (
         <div>

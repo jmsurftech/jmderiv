@@ -200,24 +200,6 @@ function RefreshButton() {
 
 ### Feature-Specific Hooks
 
-#### useRemoteConfig
-
-For accessing remote configuration:
-
-```tsx
-import { useRemoteConfig } from '@deriv/api';
-
-function FeatureComponent() {
-    const { data: config } = useRemoteConfig();
-
-    if (config?.new_feature_enabled) {
-        return <NewFeature />;
-    }
-
-    return <OldFeature />;
-}
-```
-
 #### useFeatureFlags
 
 For feature flag management:
@@ -250,14 +232,12 @@ function ConditionalFeature() {
 
 ### Utility Hooks
 
-| Hook                  | Description                 | Parameters             | Returns               |
-| --------------------- | --------------------------- | ---------------------- | --------------------- |
-| `useInvalidateQuery`  | Invalidate cached queries   | `()`                   | `(queryKey) => void`  |
-| `useRemoteConfig`     | Access remote configuration | `()`                   | `QueryResult<Config>` |
-| `useFeatureFlags`     | Feature flag management     | `()`                   | `FeatureFlagsResult`  |
-| `useIntercom`         | Intercom integration        | `()`                   | `IntercomMethods`     |
-| `useIsRtl`            | RTL language detection      | `()`                   | `boolean`             |
-| `useLocalStorageData` | Local storage utilities     | `(key, defaultValue?)` | `[value, setValue]`   |
+| Hook                  | Description               | Parameters             | Returns              |
+| --------------------- | ------------------------- | ---------------------- | -------------------- |
+| `useInvalidateQuery`  | Invalidate cached queries | `()`                   | `(queryKey) => void` |
+| `useFeatureFlags`     | Feature flag management   | `()`                   | `FeatureFlagsResult` |
+| `useIsRtl`            | RTL language detection    | `()`                   | `boolean`            |
+| `useLocalStorageData` | Local storage utilities   | `(key, defaultValue?)` | `[value, setValue]`  |
 
 ## Dependencies
 

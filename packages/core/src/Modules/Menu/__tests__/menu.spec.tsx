@@ -38,6 +38,8 @@ jest.mock('App/Components/Layout/Header/menu-link', () => jest.fn(({ text }: { t
 jest.mock('@deriv/shared', () => ({
     ...jest.requireActual('@deriv/shared'),
     getHelpCentreUrl: jest.fn(() => 'https://help.deriv.com'),
+    getSignupUrl: jest.fn(() => ''),
+    isFeatureEnabled: jest.fn(() => true),
 }));
 
 describe('MenuPage', () => {

@@ -4,13 +4,12 @@ A lightweight utility library providing essential helper functions for account m
 
 ## Overview
 
-The `@deriv/utils` package provides a focused collection of utility functions specifically designed for Deriv applications. It includes essential helpers for account management, localStorage operations, authentication token handling, chat integration, logging, and date/time utilities. This package serves as a lightweight alternative to the more comprehensive `@deriv/shared` package, focusing on core utilities needed across multiple applications.
+The `@deriv/utils` package provides a focused collection of utility functions specifically designed for Deriv applications. It includes essential helpers for account management, localStorage operations, authentication token handling, logging, and date/time utilities. This package serves as a lightweight alternative to the more comprehensive `@deriv/shared` package, focusing on core utilities needed across multiple applications.
 
 ## Key Features
 
 - **Account Management**: Utilities for handling user accounts and authentication tokens
 - **Storage Operations**: Safe localStorage access with JSON parsing capabilities
-- **Chat Integration**: Intercom chat management utilities
 - **Error Logging**: Console-based error logging
 - **Date/Time Utilities**: Moment.js integration with UTC handling
 - **URL Parsing**: External link detection and URL validation
@@ -28,7 +27,6 @@ src/
 ├── getActiveLoginIDFromLocalStorage.ts # Active login ID retrieval
 ├── getLocalStorage.ts                 # Safe localStorage operations
 ├── getToken.ts                        # Authentication token utilities
-├── chat.ts                           # Intercom chat integration
 ├── logging.ts                        # Error logging
 ├── moment.ts                         # Date/time utilities
 └── parse-url.ts                      # URL parsing utilities
@@ -113,25 +111,6 @@ import { getLocalStorage } from '@deriv/utils';
 
 const value = getLocalStorage('key');
 // Returns: any | null
-```
-
-## Chat Integration
-
-### Chat
-
-Intercom chat management utilities:
-
-```typescript
-import { Chat } from '@deriv/utils';
-
-// Open chat widget
-Chat.open();
-
-// Close chat widget
-Chat.close();
-
-// Clear chat session
-Chat.clear();
 ```
 
 ## Error Logging

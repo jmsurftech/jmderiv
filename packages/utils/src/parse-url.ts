@@ -21,9 +21,8 @@ export const isAllowedRedirectDomain = (url: string): boolean => {
         const hostname = urlObj.hostname;
 
         // Check against main domain whitelist from brand config
-        const isMainDomain = (config_data.brand_domains as string[]).some(
-            domain => hostname === domain || hostname.endsWith(`.${domain}`)
-        );
+        const brandDomain = (config_data as Record<string, unknown> & typeof config_data).brand_domain as string;
+        const isMainDomain = hostname === brandDomain || hostname.endsWith(`.${brandDomain}`);
 
         // Check against preview deployment pattern
         const isPreviewDomain = PREVIEW_DOMAIN_PATTERN.test(hostname);

@@ -112,6 +112,19 @@ This is a white-label template. All branding is driven by **`brand.config.json`*
 - `packages/shared/src/styles/tokens/semantic.scss`
 - `packages/shared/src/styles/tokens/components.scss`
 
+### Key config fields
+
+| Field                               | Purpose                                                                                                        |
+| ----------------------------------- | -------------------------------------------------------------------------------------------------------------- |
+| `brand_domain`                      | Single production domain string (e.g. `"yourdomain.com"`). Used for environment detection and security checks. |
+| `brand_hostname.staging/production` | Platform hostname for each environment. Also used as the canonical URL and OAuth redirect URI base.            |
+| `platform.home_url`                 | URL the sidebar Home button navigates to.                                                                      |
+| `platform.help_centre_url`          | URL the sidebar Help button opens.                                                                             |
+| `signup_url.staging/production`     | Signup page URLs — used by the signup button when enabled.                                                     |
+| `derivws.staging/production`        | DerivWS WebSocket API base URL.                                                                                |
+| `features.dark_mode`                | Show/hide the dark mode toggle in the sidebar and mobile menu. Default: `false`.                               |
+| `features.language_switcher`        | Show/hide the language switcher in the sidebar and mobile menu. Default: `false`.                              |
+
 ### App ID
 
 The platform connects to the Deriv WebSocket API (v3). Register your own App ID at [https://developers.deriv.com](https://developers.deriv.com) and set it in `brand.config.json` under `app_id.staging` and `app_id.production`.
@@ -629,14 +642,13 @@ export type {
 - Crypto utilities
 - Type helpers
 
-### **@deriv/api & @deriv/api-v2** - Remote Config
+### **@deriv/api & @deriv/api-v2** - API Hooks
 
-**Purpose:** Feature flag management  
+**Purpose:** React Query hooks over WebSocket and REST APIs
 **Provides:**
 
-- Remote configuration from server
-- Feature flag toggles
-- A/B testing setup
+- `useQuery`, `useMutation`, `useSubscription` — typed API hooks
+- `useFeatureFlags` — MobX-based feature flag access
 
 ---
 
@@ -1344,17 +1356,10 @@ import type { TActiveSymbolsRequest, TPriceProposalResponse, TBuyContractRespons
 **Via .env variables:**
 
 ```
-CROWDIN_URL=https://crowdin-api.example.com
-R2_PROJECT_NAME=derivatives-trader
-CROWDIN_BRANCH_NAME=main
+OAUTH_CLIENT_ID=your_client_id_here
+TRANSLATIONS_CDN_URL=https://cdn.yourdomain.com/translations
 NODE_ENV=production
 ```
-
-**Feature flags:**
-
-- Stored in `@deriv/api-v2` remote config
-- Toggled per environment (qa197/qa194 for staging)
-- No rebuild required for flag changes
 
 ### Build Pipeline
 

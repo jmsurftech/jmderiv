@@ -2,8 +2,8 @@
 import config_data from '../../../../../brand.config.json';
 import { appendLangParam } from '../url/helpers';
 
-export const getBrandDomains = (): readonly string[] => {
-    return config_data.brand_domains;
+export const getBrandDomain = (): string => {
+    return (config_data as Record<string, unknown> & typeof config_data).brand_domain as string;
 };
 
 export const getBrandName = () => {
@@ -20,10 +20,9 @@ export const getBrandLogo = () => {
 export const isProduction = (): boolean => {
     if (typeof window === 'undefined') return false;
     const hostname = window.location.hostname;
-    return (config_data.brand_domains as string[]).some(domain => {
-        const pattern = new RegExp(`^(www\\.)?(beta-)?dtrader\\.${domain.replaceAll('.', '\\.')}$`, 'i');
-        return pattern.test(hostname);
-    });
+    const domain = getBrandDomain();
+    const pattern = new RegExp(`^(www\\.)?(beta-)?dtrader\\.${domain.replaceAll('.', '\\.')}$`, 'i');
+    return pattern.test(hostname);
 };
 
 export const getBrandHostname = () => {
@@ -103,7 +102,7 @@ export const getDomainName = () => {
  */
 const substituteDerivDomain = (url: string): string => {
     const domain = getDomainName();
-    if (!domain || !(config_data.brand_domains as string[]).includes(domain)) return url;
+    if (!domain || domain !== getBrandDomain()) return url;
     try {
         // Parse the URL so we only rewrite the hostname — not query params or path segments
         const parsed = new URL(url);
@@ -121,7 +120,7 @@ const substituteDerivDomain = (url: string): string => {
  */
 export const getTrustedDomainName = (): string => {
     const domain = getDomainName();
-    return (config_data.brand_domains as string[]).includes(domain) ? domain : 'deriv.com';
+    return domain === getBrandDomain() ? domain : 'deriv.com';
 };
 
 /**
@@ -137,9 +136,45 @@ export const getRedirectHostname = (): string => {
     if (typeof window === 'undefined') return '';
     const hostname = window.location.hostname;
     const domain = getDomainName();
-    if ((config_data.brand_domains as string[]).includes(domain)) return hostname;
+    if (domain === getBrandDomain()) return hostname;
     if (CLOUDFLARE_PAGES_PATTERN.test(hostname)) return hostname;
     return '';
+};
+
+/**
+ * Gets the v4 REST API base URL (https://api.derivws.com)
+ */
+export const getApiV4BaseUrl = (): string => {
+    const cfg = config_data as Record<string, unknown> & typeof config_data;
+    const derivws = cfg.derivws as { staging: string; production: string } | undefined;
+    if (!derivws) return 'https://api.derivws.com';
+    return isProduction() ? derivws.production : derivws.staging;
+};
+
+/**
+ * Gets the auth base URL (e.g., "https://auth.deriv.com")
+ */
+export const getAuthBaseUrl = (): string => {
+    return isProduction() ? config_data.auth.production : config_data.auth.staging;
+};
+
+export const getOAuthClientId = (): string => {
+    const client_id = process.env.OAUTH_CLIENT_ID;
+    if (!client_id)
+        throw new Error(
+            'OAUTH_CLIENT_ID is not set. Add it to your .env file for local dev or GitHub Environment secrets for CI.'
+        );
+    return client_id;
+};
+
+/**
+ * Gets the OAuth2 redirect URI for the current environment
+ */
+export const getOAuthRedirectUri = (): string => {
+    const auth = config_data.auth as Record<string, unknown>;
+    return isProduction()
+        ? ((auth.oauth_redirect_uri_production as string) ?? '')
+        : ((auth.oauth_redirect_uri_staging as string) ?? '');
 };
 
 /**
@@ -207,6 +242,23 @@ export const getApiBaseUrl = (): string => {
  * Gets the Help Centre URL
  * @returns Help Centre URL (e.g., "https://trade.deriv.com/help-centre")
  */
+export const getHomeUrl = (): string => {
+    return substituteDerivDomain(((config_data.platform as Record<string, unknown>).home_url as string) ?? '');
+};
+
 export const getHelpCentreUrl = (): string => {
     return substituteDerivDomain(config_data.platform.help_centre_url);
+};
+
+export const getSignupUrl = (): string => {
+    const signup = (config_data as Record<string, unknown>).signup_url as
+        | { staging: string; production: string }
+        | undefined;
+    if (!signup) return '';
+    return substituteDerivDomain(isProduction() ? signup.production : signup.staging);
+};
+
+export const isFeatureEnabled = (feature: 'dark_mode' | 'language_switcher'): boolean => {
+    const features = (config_data as Record<string, unknown>).features as Record<string, boolean> | undefined;
+    return features?.[feature] ?? false;
 };

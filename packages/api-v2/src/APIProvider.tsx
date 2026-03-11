@@ -1,6 +1,6 @@
 import React, { createContext, PropsWithChildren, useCallback, useContext, useEffect, useRef, useState } from 'react';
 
-import { getBrandName, getSocketURL } from '@deriv/shared';
+import { getSocketURL } from '@deriv/shared';
 import { getInitialLanguage } from '@deriv-com/translations';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 
@@ -33,21 +33,21 @@ type APIContextData = {
     createNewWSConnection: () => void;
 };
 
+const V4_PUBLIC_WS = 'wss://api.derivws.com/trading/v1/options/ws/public';
+
 /**
- * Retrieves the WebSocket URL based on the current environment.
- * @returns {string} The WebSocket URL.
+ * Returns the WebSocket URL.
+ * Uses the provided authenticated OTP URL when available; falls back to the v4 public endpoint.
  */
-const getWebSocketURL = (endpoint: string) => {
-    return `wss://${endpoint}/websockets/v3?brand=${getBrandName().toLowerCase()}`;
-};
+const getWebSocketURL = (ws_url?: string) => ws_url ?? V4_PUBLIC_WS;
 
 const APIContext = createContext<APIContextData | null>(null);
 
 /**
  * @returns {WebSocket} The initialized WebSocket instance.
  */
-const initializeConnection = (endpoint: string, onWSClose: () => void, onOpen?: () => void): WebSocket => {
-    const wss_url = getWebSocketURL(endpoint);
+const initializeConnection = (onWSClose: () => void, onOpen?: () => void, ws_url?: string): WebSocket => {
+    const wss_url = getWebSocketURL(ws_url);
 
     const connection = new WebSocket(wss_url);
     connection.addEventListener('close', () => {
@@ -64,7 +64,7 @@ const initializeConnection = (endpoint: string, onWSClose: () => void, onOpen?: 
 type SubscribeReturnType = ReturnType<TSubscribeFunction>; // This captures the entire return type of TSubscribeFunction
 type UnwrappedSubscription = Awaited<SubscribeReturnType>;
 
-const APIProvider = ({ children }: PropsWithChildren) => {
+const APIProvider = ({ children, ws_url }: PropsWithChildren<{ ws_url?: string }>) => {
     const [reconnect, setReconnect] = useState(false);
     const connectionRef = useRef<WebSocket>();
     const subscriptionsRef = useRef<Record<string, UnwrappedSubscription['subscription']>>();
@@ -107,7 +107,6 @@ const APIProvider = ({ children }: PropsWithChildren) => {
     // have to be here and not inside useEffect as there are places in code expecting this to be available
     if (!connectionRef.current) {
         connectionRef.current = initializeConnection(
-            endpoint,
             () => {
                 if (isMounted.current) setReconnect(true);
             },
@@ -125,7 +124,8 @@ const APIProvider = ({ children }: PropsWithChildren) => {
                         onConnectedRef.current = undefined;
                     }
                 }
-            }
+            },
+            ws_url
         );
     }
 
@@ -197,7 +197,6 @@ const APIProvider = ({ children }: PropsWithChildren) => {
         let reconnectTimerId: NodeJS.Timeout;
         if (reconnect) {
             connectionRef.current = initializeConnection(
-                endpoint,
                 () => {
                     reconnectTimerId = setTimeout(() => {
                         if (isMounted.current) {
@@ -214,7 +213,8 @@ const APIProvider = ({ children }: PropsWithChildren) => {
                     if (onReconnectedRef.current) {
                         onReconnectedRef.current();
                     }
-                }
+                },
+                ws_url
             );
             setReconnect(false);
         }

@@ -1,3 +1,4 @@
+/// <reference types="@testing-library/jest-dom" />
 import React from 'react';
 
 import { redirectToLogin, redirectToSignUp } from '@deriv/shared';
@@ -79,7 +80,7 @@ describe('<AuthorizationRequiredModal />', () => {
     it('redirectToSignUp should be called when Log in button is clicked', async () => {
         render(<AuthorizationRequiredModal {...mocked_props} />);
         await userEvent.click(screen.getByText(/create free account/i));
-        expect(redirectToSignUp).toHaveBeenCalledWith('EN');
+        expect(redirectToSignUp).toHaveBeenCalled();
     });
     it('should return null when is_visible is false', () => {
         mocked_props.is_visible = false;

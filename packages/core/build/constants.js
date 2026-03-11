@@ -125,13 +125,14 @@ const MINIMIZERS = !IS_RELEASE
 
 const plugins = ({ base, is_test_env }) => {
     return [
-        new Dotenv({ systemvars: true }),
+        new Dotenv({
+            path: path.resolve(__dirname, '../../../.env'),
+            systemvars: true, // also read from actual environment (CI secrets, shell exports)
+            silent: true, // don't error if .env file is missing (CI won't have one)
+        }),
         new DefinePlugin({
             'process.env.REF_NAME': JSON.stringify(process.env.REF_NAME),
-            'process.env.REMOTE_CONFIG_URL': JSON.stringify(process.env.REMOTE_CONFIG_URL),
-            'process.env.R2_PROJECT_NAME': JSON.stringify(process.env.R2_PROJECT_NAME),
-            'process.env.CROWDIN_BRANCH_NAME': JSON.stringify(process.env.CROWDIN_BRANCH_NAME),
-            'process.env.CROWDIN_URL': JSON.stringify('https://translations.deriv.com'),
+            'process.env.TRANSLATIONS_CDN_URL': JSON.stringify(process.env.TRANSLATIONS_CDN_URL || ''),
         }),
         new CleanWebpackPlugin(),
         new CopyPlugin(copyConfig(base)),

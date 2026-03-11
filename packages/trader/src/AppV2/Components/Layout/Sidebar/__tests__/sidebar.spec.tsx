@@ -11,8 +11,9 @@ jest.mock('@deriv/shared', () => ({
     useWS: () => ({
         send: jest.fn(),
     }),
-    getBrandUrl: jest.fn(() => 'https://deriv.com'),
+    getHomeUrl: jest.fn(() => 'https://home.deriv.com/dashboard'),
     getHelpCentreUrl: jest.fn(() => 'https://trade.deriv.com/help-centre'),
+    isFeatureEnabled: jest.fn(() => true),
 }));
 
 jest.mock('@deriv/api', () => ({
@@ -53,7 +54,7 @@ jest.mock('@deriv/quill-icons', () => ({
 
 jest.mock('../language-selector', () => jest.fn(() => <div>LanguageSelector</div>));
 jest.mock('../account-selector', () => jest.fn(() => <div>AccountSelector</div>));
-jest.mock('../../../Elements/PositionsDrawer', () => ({
+jest.mock('../PositionsDrawer', () => ({
     PositionsDrawerContent: jest.fn(() => <div>PositionsDrawerContent</div>),
     PositionsDrawerFooter: jest.fn(() => <div>PositionsDrawerFooter</div>),
 }));
@@ -130,7 +131,7 @@ describe('<Sidebar />', () => {
         renderSidebar(store);
         const homeButton = screen.getByTestId('dt_sidebar_home');
         fireEvent.click(homeButton);
-        expect(window.location.href).toBe('https://deriv.com/home?source=options&acc=options&curr=USD&lang=en');
+        expect(window.location.href).toBe('https://home.deriv.com/dashboard');
         expect(store.ui.closeSidebarFlyout).toHaveBeenCalled();
     });
 

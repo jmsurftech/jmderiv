@@ -2,7 +2,15 @@ import React, { createContext, PropsWithChildren, useCallback, useContext, useEf
 
 // @ts-expect-error `@deriv/deriv-api` is not in TypeScript, Hence we ignore the TS error.
 import DerivAPIBasic from '@deriv/deriv-api/dist/DerivAPIBasic';
-import { getAccountType, getApiCoreBaseUrl, getAppId, getBrandName, getSocketURL, useWS } from '@deriv/shared';
+import {
+    getApiV4BaseUrl,
+    getAccountType,
+    getApiCoreBaseUrl,
+    getAppId,
+    getBrandName,
+    getSocketURL,
+    useWS,
+} from '@deriv/shared';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 
 import {
@@ -72,20 +80,14 @@ const getSharedQueryClientContext = (): QueryClient => {
     return window.ReactQueryClient;
 };
 
-/**
- * Retrieves the WebSocket URL based on the account_type URL parameter.
- * @returns {string} The WebSocket URL.
- */
-const getWebSocketURL = () => {
-    const endpoint = getSocketURL();
-    const brand = getBrandName().toLowerCase();
-    // [AI]
-    const app_id = getAppId();
-    // [/AI]
-    const wss_url = `wss://${endpoint}/websockets/v3?app_id=${app_id}&brand=${brand}`;
+const V4_PUBLIC_WS = 'wss://api.derivws.com/trading/v1/options/ws/public';
 
-    return wss_url;
-};
+/**
+ * Returns the WebSocket URL to use.
+ * When an authenticated OTP URL is provided, use it directly.
+ * Otherwise fall back to the v4 public endpoint.
+ */
+const getWebSocketURL = (ws_url?: string) => ws_url ?? V4_PUBLIC_WS;
 
 /**
  * Retrieves or initializes a WebSocket instance based on the provided URL.
@@ -127,12 +129,12 @@ export const getActiveWebsocket = () => {
  * without causing race conditions with derivatives-trader core stores.
  * @returns {DerivAPIBasic} The initialized DerivAPI instance.
  */
-const initializeDerivAPI = (onWSClose: () => void): DerivAPIBasic => {
+const initializeDerivAPI = (onWSClose: () => void, ws_url?: string): DerivAPIBasic => {
     if (!window.DerivAPI) {
         window.DerivAPI = {};
     }
 
-    const wss_url = getWebSocketURL();
+    const wss_url = getWebSocketURL(ws_url);
     const websocketConnection = getWebsocketInstance(wss_url, onWSClose);
 
     if (!window.DerivAPI?.[wss_url] || window.DerivAPI?.[wss_url].isConnectionClosed()) {
@@ -157,15 +159,17 @@ const getEnvironment = () => {
 };
 
 type TAPIProviderProps = {
-    /** If set to true, the APIProvider will instantiate it's own socket connection. */
+    /** If set to true, the APIProvider will instantiate its own socket connection. */
     standalone?: boolean;
+    /** Authenticated OTP WebSocket URL from the v4 REST API. Falls back to public endpoint when omitted. */
+    ws_url?: string;
 };
 
-const APIProvider = ({ children, standalone = false }: PropsWithChildren<TAPIProviderProps>) => {
+const APIProvider = ({ children, standalone = false, ws_url }: PropsWithChildren<TAPIProviderProps>) => {
     const WS = useWS();
     const [reconnect, setReconnect] = useState(false);
     const [environment, setEnvironment] = useState(getEnvironment());
-    const standaloneDerivAPI = useRef(standalone ? initializeDerivAPI(() => setReconnect(true)) : null);
+    const standaloneDerivAPI = useRef(standalone ? initializeDerivAPI(() => setReconnect(true), ws_url) : null);
     const subscriptions = useRef<Record<string, DerivAPIBasic['subscribe']>>();
 
     const send: TSendFunction = (name, payload) => {
@@ -234,16 +238,16 @@ const APIProvider = ({ children, standalone = false }: PropsWithChildren<TAPIPro
         if (standalone || reconnect) {
             standaloneDerivAPI.current = initializeDerivAPI(() => {
                 reconnectTimerId = setTimeout(() => setReconnect(true), 500);
-            });
+            }, ws_url);
             setReconnect(false);
         }
 
         return () => clearTimeout(reconnectTimerId);
-    }, [environment, reconnect, standalone]);
+    }, [environment, reconnect, standalone, ws_url]);
 
     const restAPIConfig: TRestAPIConfig = React.useMemo(() => {
         return {
-            baseUrl: getApiCoreBaseUrl(),
+            baseUrl: getApiV4BaseUrl(),
         };
     }, []);
 

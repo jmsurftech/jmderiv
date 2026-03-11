@@ -1,9 +1,10 @@
+/// <reference types="@testing-library/jest-dom" />
 import React from 'react';
 import { Router } from 'react-router-dom';
 import { createBrowserHistory } from 'history';
 import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import { getBrandUrl, routes } from '@deriv/shared';
+import { getBrandUrl } from '@deriv/shared';
 import { mockStore, StoreProvider } from '@deriv/stores';
 import { useDevice } from '@deriv-com/ui';
 import MenuLink from 'App/Components/Layout/Header/menu-link';

@@ -62,11 +62,31 @@
         white-space: nowrap;
     }
 
+    &__logged-out {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+        margin-left: 2rem;
+    }
+
+    &__signup {
+        border-radius: 24px;
+        background-color: transparent;
+        transition: opacity 0.2s ease;
+
+        &:hover {
+            opacity: 0.8;
+        }
+
+        &:active {
+            opacity: 0.6;
+        }
+    }
+
     &__login {
         background-color: var(--color-button-primary-bg);
         border-radius: 24px;
         transition: opacity 0.2s ease;
-        margin-left: 2rem;
 
         &:hover {
             opacity: 0.8;

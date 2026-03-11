@@ -18,7 +18,15 @@ import {
     StandaloneSunBrightRegularIcon,
 } from '@deriv/quill-icons';
 // [AI]
-import { getBrandLogo, getBrandLogoDark, getBrandName, getBrandUrl, getHelpCentreUrl, routes } from '@deriv/shared';
+import {
+    getBrandLogo,
+    getBrandLogoDark,
+    getBrandName,
+    getHomeUrl,
+    getHelpCentreUrl,
+    isFeatureEnabled,
+    routes,
+} from '@deriv/shared';
 // [/AI]
 import { observer, useStore } from '@deriv/stores';
 import { Localize, localize, useTranslations } from '@deriv-com/translations';
@@ -39,11 +47,10 @@ type TSidebarItem = {
 };
 
 const Sidebar = observer(() => {
-    const { ui, client, portfolio, common } = useStore();
+    const { ui, client, portfolio } = useStore();
     const { currentLang } = useTranslations();
     const { is_dark_mode_on, active_sidebar_flyout, setSidebarFlyout, closeSidebarFlyout } = ui;
     const { is_logged_in } = client;
-    const { current_language } = common;
     const { active_positions_count, onMount, onUnmount } = portfolio;
     const location = useLocation();
     const history = useHistory();
@@ -91,10 +98,7 @@ const Sidebar = observer(() => {
     const handleHomeClick = () => {
         closeSidebarFlyout();
         sendBridgeEvent('trading:home', () => {
-            const brandUrl = getBrandUrl();
-            const lang_param = current_language ? `&lang=${current_language}` : '';
-            const currency = client.currency || '';
-            window.location.href = `${brandUrl}/home?source=options&acc=options&curr=${currency}${lang_param}`;
+            window.location.href = getHomeUrl();
         });
     };
 
@@ -151,30 +155,38 @@ const Sidebar = observer(() => {
             isActive: false,
             dataTestId: 'dt_sidebar_help',
         },
-        {
-            id: 'language',
-            icon: isLanguageActive ? (
-                <StandaloneGlobeFillIcon fill='var(--color-nav-item-active)' iconSize='sm' />
-            ) : (
-                <StandaloneGlobeRegularIcon fill='var(--color-text-primary)' iconSize='sm' />
-            ),
-            label: localize('Language'),
-            onClick: handleLanguageToggle,
-            isActive: isLanguageActive,
-            dataTestId: 'dt_sidebar_language',
-        },
-        {
-            id: 'theme',
-            icon: is_dark_mode_on ? (
-                <StandaloneMoonRegularIcon fill='var(--color-text-primary)' iconSize='sm' />
-            ) : (
-                <StandaloneSunBrightRegularIcon fill='var(--color-text-primary)' iconSize='sm' />
-            ),
-            label: localize('Theme'),
-            onClick: handleThemeToggle,
-            isActive: false,
-            dataTestId: 'dt_sidebar_theme',
-        },
+        ...(isFeatureEnabled('language_switcher')
+            ? [
+                  {
+                      id: 'language',
+                      icon: isLanguageActive ? (
+                          <StandaloneGlobeFillIcon fill='var(--color-nav-item-active)' iconSize='sm' />
+                      ) : (
+                          <StandaloneGlobeRegularIcon fill='var(--color-text-primary)' iconSize='sm' />
+                      ),
+                      label: localize('Language'),
+                      onClick: handleLanguageToggle,
+                      isActive: isLanguageActive,
+                      dataTestId: 'dt_sidebar_language',
+                  },
+              ]
+            : []),
+        ...(isFeatureEnabled('dark_mode')
+            ? [
+                  {
+                      id: 'theme',
+                      icon: is_dark_mode_on ? (
+                          <StandaloneMoonRegularIcon fill='var(--color-text-primary)' iconSize='sm' />
+                      ) : (
+                          <StandaloneSunBrightRegularIcon fill='var(--color-text-primary)' iconSize='sm' />
+                      ),
+                      label: localize('Theme'),
+                      onClick: handleThemeToggle,
+                      isActive: false,
+                      dataTestId: 'dt_sidebar_theme',
+                  },
+              ]
+            : []),
         {
             id: 'account',
             icon: isAccountActive ? (
@@ -241,7 +253,7 @@ const Sidebar = observer(() => {
                 {/* Main Navigation */}
                 <nav className='sidebar__nav'>
                     <div className='sidebar__nav-main'>
-                        {navigationItems.map((item, index) => {
+                        {navigationItems.map(item => {
                             const shouldShow = item.id === 'home' || is_logged_in;
 
                             if (!shouldShow) return null;
