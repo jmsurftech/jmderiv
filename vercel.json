@@ -1,0 +1,16 @@
+{
+  "version": 2,
+  "buildCommand": "npm run bootstrap && npm run generate:colors && npm run build:all",
+  "outputDirectory": "packages/core/dist",
+  "installCommand": "npm install",
+  "framework": null,
+  "routes": [
+    {
+      "src": "/(.*)",
+      "dest": "/packages/core/dist/$1"
+    }
+  ],
+  "env": {
+    "OAUTH_CLIENT_ID": "@oauth_client_id"
+  }
+}
